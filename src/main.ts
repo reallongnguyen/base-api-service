@@ -4,7 +4,9 @@ import helmet from 'helmet';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import HttpResponse from 'src/commons/models/HttpResponse';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { version } from '../package.json';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -23,6 +25,18 @@ async function bootstrap() {
       exceptionFactory: HttpResponse.transformValidatorError,
     }),
   );
+
+  // API docs
+  const swaggerDocConfig = new DocumentBuilder()
+    .addBearerAuth()
+    .setTitle(`${config.get<string>('appName')} API docs`)
+    .setDescription('The API document is generated automatically')
+    .setVersion(version)
+    .build();
+
+  const swaggerDoc = SwaggerModule.createDocument(app, swaggerDocConfig);
+
+  SwaggerModule.setup('api', app, swaggerDoc);
 
   await app.listen(config.get<string>('appPort'));
 }

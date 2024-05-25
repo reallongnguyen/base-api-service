@@ -1,53 +1,54 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { uuidv7 } from 'uuidv7';
-import { Logger } from 'nestjs-pino';
 import HttpResponse from 'src/commons/models/HttpResponse';
+import { ErrorResponse } from 'src/commons/decorators/error-response.decorator';
+import { PaginatedSuccessResponse } from 'src/commons/decorators/paginated-list-success.decorator';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { CreatedSuccessResponse } from 'src/commons/decorators/created-success.decorator';
 import { UserService } from './user.service';
-import { CreateUserDTO } from './dto/CreateUser.dto';
+import { UserCreateInput } from './dto/user.dto';
+import { User } from './models/User';
 
 // This is a example controller for testing the prisma client
 @Controller({
   path: 'users',
   version: '1',
 })
+@ApiTags('users')
+@ErrorResponse('common')
 export class UserController {
-  constructor(
-    private readonly userService: UserService,
-    private readonly logger: Logger,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
   @Post()
-  async create(@Body() userData: CreateUserDTO) {
-    if (userData.name === 'incorrectAuthId') {
-      throw HttpResponse.error('user.create.incorrectAuthId');
+  @ApiOperation({
+    description: 'Create a new user with name and avatar URL',
+    summary: 'Create a new user',
+  })
+  @CreatedSuccessResponse(User)
+  @ErrorResponse('user.create', { hasValidationErr: true })
+  async create(@Body() userData: UserCreateInput) {
+    const { data: user, err } = await this.userService.createUser(userData);
+
+    if (err) {
+      throw HttpResponse.error(err);
     }
 
-    try {
-      const user = await this.userService.createUser({
-        authId: uuidv7(),
-        name: userData.name,
-      });
-
-      this.logger.debug(`user: create user ${userData.name} success`);
-
-      return HttpResponse.ok(user);
-    } catch (err) {
-      this.logger.error(`user: create: ${err.message}`);
-
-      throw HttpResponse.error('common.serverError');
-    }
+    return HttpResponse.ok(user);
   }
 
   @Get()
+  @ApiOperation({
+    description: 'Get list of user with pagination',
+    summary: 'Get list of user',
+  })
+  @PaginatedSuccessResponse(User)
+  @ErrorResponse('user.list')
   async list() {
-    try {
-      const res = await this.userService.users({});
+    const { data, err } = await this.userService.users({});
 
-      return HttpResponse.ok(res);
-    } catch (err) {
-      this.logger.error(`user: list: ${err.message}`);
-
-      throw HttpResponse.error('common.serverError');
+    if (err) {
+      throw HttpResponse.error(err);
     }
+
+    return HttpResponse.ok(data);
   }
 }
