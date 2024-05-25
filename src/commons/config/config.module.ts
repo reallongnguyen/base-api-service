@@ -5,7 +5,14 @@ import configuration from './configuration';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: ['.env'],
+      envFilePath: [
+        '.env.local',
+        '.env.production.local',
+        '.env.production',
+        '.env.development.local',
+        '.env.development',
+        '.env',
+      ],
       load: [configuration],
     }),
   ],
