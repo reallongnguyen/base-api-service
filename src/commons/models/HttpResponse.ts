@@ -26,18 +26,18 @@ export enum MessageType {
 
 export const mapHttpCodeToMessage = {
   // 200 201
-  200: 'SUCCESS',
-  201: 'SUCCESS',
+  200: 'success',
+  201: 'success',
   // 400
-  400: 'BAD_REQUEST',
+  400: 'bad_request',
   // 401
-  401: 'AUTHENTICATION_FAILED',
+  401: 'authentication_failed',
   // 403
-  403: 'FORBIDDEN',
+  403: 'forbidden',
   // 404
-  404: 'NOT_FOUND',
+  404: 'not_found',
   // 500
-  500: 'INTERNAL_SERVER_ERROR',
+  500: 'internal_server_error',
 };
 
 export default class HttpResponse<T> {
