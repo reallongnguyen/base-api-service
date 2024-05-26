@@ -1,14 +1,9 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpException,
-  HttpStatus,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { uuidv7 } from 'uuidv7';
 import { Logger } from 'nestjs-pino';
+import HttpResponse from 'src/commons/models/HttpResponse';
 import { UserService } from './user.service';
+import { CreateUserDTO } from './dto/CreateUser.dto';
 
 // This is a example controller for testing the prisma client
 @Controller({
@@ -22,7 +17,11 @@ export class UserController {
   ) {}
 
   @Post()
-  async create(@Body() userData: { name?: string }) {
+  async create(@Body() userData: CreateUserDTO) {
+    if (userData.name === 'incorrectAuthId') {
+      throw HttpResponse.error('user.create.incorrectAuthId');
+    }
+
     try {
       const user = await this.userService.createUser({
         authId: uuidv7(),
@@ -31,37 +30,24 @@ export class UserController {
 
       this.logger.debug(`user: create user ${userData.name} success`);
 
-      return {
-        message: 'success',
-        data: user,
-      };
+      return HttpResponse.ok(user);
     } catch (err) {
       this.logger.error(`user: create: ${err.message}`);
 
-      return new HttpException(err.message, HttpStatus.BAD_REQUEST);
+      throw HttpResponse.error('common.serverError');
     }
   }
 
   @Get()
   async list() {
     try {
-      const users = await this.userService.users({});
+      const res = await this.userService.users({});
 
-      return {
-        message: 'success',
-        data: {
-          edges: users,
-          pagination: {
-            total: users.length,
-            offset: 0,
-            limit: 0,
-          },
-        },
-      };
+      return HttpResponse.ok(res);
     } catch (err) {
       this.logger.error(`user: list: ${err.message}`);
 
-      return new HttpException(err.message, HttpStatus.BAD_REQUEST);
+      throw HttpResponse.error('common.serverError');
     }
   }
 }

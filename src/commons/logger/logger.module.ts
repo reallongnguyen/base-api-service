@@ -1,13 +1,9 @@
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 import { join } from 'path';
 import { DestinationStream } from 'pino';
 import { Options } from 'pino-http';
 import { PrettyOptions } from 'pino-pretty';
-
-import { LoggerService } from './logger.service';
-import { AppConfigModule } from '../config/config.module';
 
 const getPinoHttpOptions = (
   options,
@@ -54,24 +50,11 @@ const getPinoHttpOptions = (
   },
 });
 
-/**
- *
- */
 @Module({
   imports: [
-    AppConfigModule,
-    PinoLoggerModule.forRootAsync({
-      // eslint-disable-next-line no-use-before-define
-      imports: [LoggerModule],
-      inject: [LoggerService],
-      useFactory: (loggerService: LoggerService) => {
-        return {
-          pinoHttp: getPinoHttpOptions({ level: loggerService.level }),
-        };
-      },
+    PinoLoggerModule.forRoot({
+      pinoHttp: getPinoHttpOptions({ level: process.env.LOG_LEVEL }),
     }),
   ],
-  providers: [ConfigService, LoggerService],
-  exports: [ConfigService, LoggerService],
 })
 export class LoggerModule {}
