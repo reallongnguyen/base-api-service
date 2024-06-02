@@ -4,7 +4,6 @@ import { Prisma } from '@prisma/client';
 import Collection from 'src/commons/models/Collection';
 import { AppResult } from 'src/commons/models/AppResult';
 import { Logger } from 'nestjs-pino';
-import { uuidv7 } from 'uuidv7';
 import { User } from './models/User';
 import { UserCreateInput } from './dto/user.dto';
 
@@ -74,20 +73,25 @@ export class UserService {
     }
   }
 
-  async createUser(data: UserCreateInput): Promise<AppResult<User, string>> {
+  async createOrUpdateUser(
+    authId: string,
+    data: UserCreateInput,
+  ): Promise<AppResult<User, string>> {
     try {
-      const user = await this.prisma.user.create({
-        data: {
+      const user = await this.prisma.user.upsert({
+        where: { authId },
+        create: {
           ...data,
-          authId: uuidv7(),
+          authId,
         },
+        update: data,
       });
 
       return { data: user };
     } catch (err) {
-      this.logger.error(`user: create: ${err.message}`);
+      this.logger.error(`user: createOrUpdateUser: ${err.message}`);
 
-      return { err: 'common.serverError ' };
+      return { err: 'common.serverError' };
     }
   }
 
@@ -107,7 +111,7 @@ export class UserService {
     } catch (err) {
       this.logger.error(`user: update: ${err.message}`);
 
-      return { err: 'common.serverError ' };
+      return { err: 'common.serverError' };
     }
   }
 
@@ -123,7 +127,7 @@ export class UserService {
     } catch (err) {
       this.logger.error(`user: delete: ${err.message}`);
 
-      return { err: 'common.serverError ' };
+      return { err: 'common.serverError' };
     }
   }
 }

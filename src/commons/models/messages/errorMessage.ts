@@ -27,7 +27,7 @@ export const errorMessages = {
     noPrivilege: {
       httpCode: 403,
       code: 1000003,
-      message: 'no privilege',
+      message: 'require any of roles [{{roles}}]',
     },
   },
   validation: {
