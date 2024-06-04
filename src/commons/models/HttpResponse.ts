@@ -1,11 +1,11 @@
-import { HttpException, ValidationError } from '@nestjs/common';
+import { HttpException, HttpStatus, ValidationError } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import * as lodash from 'lodash';
-import { errorMessages, makeDummyErr } from './messages/errorMessage';
+import { errorMessages } from './messages/errorMessage';
 
-export interface AppError {
+export interface AppError extends Error {
+  name: string;
   message: string;
-  code: number;
 }
 
 export enum MessageType {
@@ -24,28 +24,12 @@ export enum MessageType {
   INTERNAL_SERVER_ERROR = 'internal_server_error',
 }
 
-export const mapHttpCodeToMessage = {
-  // 200 201
-  200: 'success',
-  201: 'success',
-  // 400
-  400: 'bad_request',
-  // 401
-  401: 'authentication_failed',
-  // 403
-  403: 'forbidden',
-  // 404
-  404: 'not_found',
-  // 500
-  500: 'internal_server_error',
-};
-
 export default class HttpResponse<T> {
   @ApiProperty({
     description: 'API response message',
     example: MessageType.SUCCESS,
   })
-  message: MessageType;
+  message: string;
 
   @ApiProperty({
     description: 'API response error',
@@ -57,25 +41,40 @@ export default class HttpResponse<T> {
   })
   data?: T;
 
-  constructor(message: MessageType, error?: AppError, data?: T) {
+  constructor(message: string, error?: AppError, data?: T) {
     this.message = message;
     this.error = error;
     this.data = data;
   }
 
-  static ok<T = any>(data?: T): HttpResponse<T> {
-    return new HttpResponse(MessageType.SUCCESS, undefined, data);
+  static ok<T = any>(data?: T, message?: string): HttpResponse<T> {
+    return new HttpResponse(message || MessageType.SUCCESS, undefined, data);
   }
 
   static error(
-    path: string,
+    name: string,
     extra?: {
       msgParams?: Record<string, string | number | boolean>;
     },
   ): HttpException {
-    const errorConfig = lodash.get(errorMessages, path, makeDummyErr(path));
-    const { httpCode, code, message } = errorConfig;
-    const error: AppError = { code, message };
+    const errorConfig = lodash.get(errorMessages, name);
+
+    if (!errorConfig) {
+      return new HttpException(
+        new HttpResponse(
+          'common.undefinedError',
+          {
+            name: 'common.undefinedError',
+            message: `error type '${name}' is undefined`,
+          },
+          undefined,
+        ),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    const { status, message: errorMessage } = errorConfig;
+    const error: AppError = { name, message: errorMessage };
 
     // replace {{param}} in error message with value
     if (extra?.msgParams) {
@@ -93,27 +92,30 @@ export default class HttpResponse<T> {
       });
     }
 
+    const message = name;
+
     return new HttpException(
-      new HttpResponse(
-        mapHttpCodeToMessage[httpCode] || mapHttpCodeToMessage[500],
-        error,
-        undefined,
-      ),
-      httpCode,
+      new HttpResponse(message, error, undefined),
+      status,
     );
   }
 
   static transformValidatorError(errors: ValidationError[]): HttpException {
-    const validateErrorTemplate = errorMessages.validation.validationFailed;
+    const { status } = errorMessages.validation.validationFailed;
     const firstError = errors[0];
-    const errorMessage = Object.values(firstError.constraints as any)[0];
+    const firstConstraint = Object.keys(firstError.constraints as any)[0];
+
+    const errorName = `${firstError.property}.${firstConstraint}`;
+    const errorMessage = firstError.constraints[firstConstraint] as string;
+
+    const message = `validation.${errorName}`;
 
     return new HttpException(
-      new HttpResponse(MessageType.VALIDATION_FAILED, {
-        message: errorMessage as string,
-        code: validateErrorTemplate.code,
+      new HttpResponse(message, {
+        name: errorName,
+        message: errorMessage,
       }),
-      validateErrorTemplate.httpCode,
+      status,
     );
   }
 
