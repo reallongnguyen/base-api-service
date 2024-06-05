@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserModule } from 'src/modules/user/user.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -16,12 +17,13 @@ import { AppService } from './app.service';
       inject: [ConfigService],
       useFactory: (service: ConfigService) => [
         {
-          ttl: service.get<number>('throttle.ttl'),
-          limit: service.get<number>('throttle.limit'),
+          ttl: service.get<number>('security.throttle.ttl'),
+          limit: service.get<number>('security.throttle.limit'),
         },
       ],
     }),
     // Register business modules here
+    AuthModule,
     UserModule,
   ],
   controllers: [AppController],

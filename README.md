@@ -36,12 +36,15 @@ $ yarn install
 
 In the local, you can use Docker to start depend services:
 
-- PostgreSQL
+- Postgres
+- Auth
 
 ```bash
 # Create dockers
 $ docker compose up -d
 ```
+
+Migration db for auth service at initial time: exec `deployments/docker/volumes/db/auth.sql` on Postgres DB. You can use any postgres clients such as psql, pgadmin, dbbeaver...
 
 ### Clean up
 
