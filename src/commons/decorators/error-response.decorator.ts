@@ -3,16 +3,13 @@ import { ApiExtraModels, ApiResponse } from '@nestjs/swagger';
 import * as lodash from 'lodash';
 import { errorMessages } from 'src/commons/models/messages/errorMessage';
 import FailResponseDto from 'src/commons/decorators/fail-response.dto';
-import {
-  AppError,
-  mapHttpCodeToMessage,
-} from 'src/commons/models/HttpResponse';
+import HttpResponse, { AppError } from 'src/commons/models/HttpResponse';
 
 export const ErrorResponse = (
-  path: string,
+  errorGroup: string,
   options?: { hasValidationErr: boolean },
 ) => {
-  const errorConfig = lodash.get(errorMessages, path, {});
+  const errorConfig = lodash.get(errorMessages, errorGroup, {});
 
   if (options?.hasValidationErr) {
     const { validationFailed } = errorMessages.validation;
@@ -21,22 +18,22 @@ export const ErrorResponse = (
 
   const errorGroups: Record<number, AppError[]> = {};
 
-  Object.values(errorConfig).forEach((curValue: any) => {
-    const { httpCode, code, message } = curValue;
-    const error: AppError = { code, message };
+  Object.entries(errorConfig).forEach(([type, errorInfo]: [string, any]) => {
+    const { status, description } = errorInfo;
+    const error: AppError = {
+      message: description,
+      name: `${errorGroup}.${type}`,
+    };
 
-    if (!errorGroups[httpCode]) {
-      errorGroups[httpCode] = [];
+    if (!errorGroups[status]) {
+      errorGroups[status] = [];
     }
 
-    errorGroups[curValue.httpCode].push(error);
+    errorGroups[status].push(error);
   });
 
   const errorDecorators = Object.entries(errorGroups).map(
-    ([httpCode, errors]) => {
-      const message =
-        mapHttpCodeToMessage[httpCode] || mapHttpCodeToMessage[500];
-
+    ([status, errors]) => {
       const errorSchemas = errors.map((error) => ({
         properties: {
           message: {
@@ -45,25 +42,22 @@ export const ErrorResponse = (
           error: {
             type: 'object',
             properties: {
+              name: {
+                type: 'string',
+              },
               message: {
                 type: 'string',
               },
-              code: {
-                type: 'number',
-              },
             },
-            required: ['message', 'code'],
+            required: ['message', 'name'],
           },
         },
-        example: {
-          error: { code: error.code, message: error.message },
-          message,
-        },
+        example: HttpResponse.error(error.name).getResponse(),
         required: ['message', 'error'],
       }));
 
       return ApiResponse({
-        status: Number(httpCode),
+        status: Number(status),
         schema: {
           oneOf: errorSchemas,
         },

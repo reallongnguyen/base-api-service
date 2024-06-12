@@ -44,6 +44,8 @@ export class UserController {
     @Body() userData: UserCreateInput,
     @AuthContext() authCtx: AuthContextInfo,
   ) {
+    throw HttpResponse.error('user.create.incorrectAuthId');
+
     const { data: user, err } = await this.userService.createOrUpdateUser(
       authCtx.authId,
       userData,
