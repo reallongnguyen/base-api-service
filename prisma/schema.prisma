@@ -13,11 +13,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  user
+  admin
+}
+
 model User {
-  id     Int     @id @default(autoincrement())
-  authId String  @unique @db.VarChar(36)
-  name   String?
-  avatar String?
+  id        String   @id @default(uuid())
+  authId    String   @unique @map("auth_id") @db.Uuid
+  name      String   @db.Text
+  avatar    String?  @db.Text
+  roles     Role[]
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("users")
 }

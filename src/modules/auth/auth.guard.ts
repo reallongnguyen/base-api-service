@@ -3,12 +3,15 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import HttpResponse from 'src/commons/models/HttpResponse';
+import { PrismaService } from 'src/prisma.service';
+import AuthContextInfo from './models/auth-context-info.model';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
+    private prismaService: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -23,7 +26,19 @@ export class AuthGuard implements CanActivate {
       });
       // 💡 We're assigning the payload to the request object here
       // so that we can access it in our route handlers
-      request.authContext = payload;
+      const authCtx = AuthContextInfo.fromJwtPayload(payload);
+
+      // TODO: get data in cache instead of query to DB
+      const user = await this.prismaService.user.findUnique({
+        where: { authId: payload.sub },
+      });
+
+      if (user) {
+        authCtx.roles = user.roles;
+        authCtx.userId = user.id;
+      }
+
+      request.authContext = authCtx;
     } catch {
       throw HttpResponse.error('common.invalidToken');
     }

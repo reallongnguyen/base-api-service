@@ -4,6 +4,7 @@ import AuthContextInfo from '../models/auth-context-info.model';
 export const AuthContext = createParamDecorator(
   (data: unknown, ctx: ExecutionContext): AuthContextInfo => {
     const request = ctx.switchToHttp().getRequest();
-    return AuthContextInfo.fromJsObject(request.authContext);
+
+    return request.authContext;
   },
 );

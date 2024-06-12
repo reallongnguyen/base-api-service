@@ -1,11 +1,46 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { Prisma } from '@prisma/client';
 import Collection from 'src/commons/models/Collection';
 import { AppResult } from 'src/commons/models/AppResult';
 import { Logger } from 'nestjs-pino';
-import { User } from './models/User';
-import { UserCreateInput } from './dto/user.dto';
+import { User } from './models/user.model';
+import { Role } from './models/role.model';
+
+export class UserUpsertInput {
+  authId: string;
+  name: string;
+  avatar?: string;
+}
+
+export class UserOutput implements Omit<User, 'createdAt' | 'updatedAt'> {
+  id: string;
+  authId: string;
+  name: string;
+  avatar: string;
+  roles: Role[];
+
+  static fromUser(u: User): UserOutput {
+    const uo = new UserOutput();
+
+    uo.id = u.id;
+    uo.authId = u.authId;
+    uo.name = u.name;
+    uo.avatar = u.avatar;
+    uo.roles = u.roles;
+
+    return uo;
+  }
+}
+
+export class ProfileOutput extends UserOutput {}
+
+export class ListUserInput {
+  name?: string;
+  offset?: number;
+  limit?: number;
+  orderBy?: 'name';
+  orderDirection?: 'asc' | 'desc';
+}
 
 @Injectable()
 export class UserService {
@@ -14,55 +49,28 @@ export class UserService {
     private logger: Logger,
   ) {}
 
-  async user(
-    userWhereUniqueInput: Prisma.UserWhereUniqueInput,
-  ): Promise<AppResult<User, string>> {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: userWhereUniqueInput,
-      });
-
-      if (!user) {
-        this.logger.error(
-          `user: get: user ${JSON.stringify(userWhereUniqueInput)} not found`,
-        );
-
-        return { err: 'user.get.notFound' };
-      }
-
-      return { data: user };
-    } catch (err) {
-      this.logger.error(`user: get: ${err.message}`);
-
-      return { err: 'common.serverError' };
-    }
-  }
-
-  async users(params: {
-    skip?: number;
-    take?: number;
-    cursor?: Prisma.UserWhereUniqueInput;
-    where?: Prisma.UserWhereInput;
-    orderBy?: Prisma.UserOrderByWithRelationInput;
-  }): Promise<AppResult<Collection<User>, string>> {
-    const { skip, take, cursor, where, orderBy } = params;
+  async users(
+    params: ListUserInput,
+  ): Promise<AppResult<Collection<UserOutput>, string>> {
+    const { name, offset, limit, orderBy, orderDirection } = params;
 
     try {
       const users = await this.prisma.user.findMany({
-        skip,
-        take,
-        cursor,
-        where,
-        orderBy,
+        skip: offset,
+        take: limit,
+        where: { name },
+        orderBy: { [orderBy]: orderDirection },
       });
+
+      const total = await this.prisma.user.count();
 
       return {
         data: {
-          edges: users,
+          edges: users.map(UserOutput.fromUser),
           pagination: {
-            total: users.length,
-            limit: take,
-            offset: skip,
+            total,
+            limit,
+            offset,
           },
         },
       };
@@ -74,20 +82,19 @@ export class UserService {
   }
 
   async createOrUpdateUser(
-    authId: string,
-    data: UserCreateInput,
-  ): Promise<AppResult<User, string>> {
+    input: UserUpsertInput,
+  ): Promise<AppResult<UserOutput, string>> {
     try {
       const user = await this.prisma.user.upsert({
-        where: { authId },
+        where: { authId: input.authId },
         create: {
-          ...data,
-          authId,
+          ...input,
+          roles: [Role.user],
         },
-        update: data,
+        update: input,
       });
 
-      return { data: user };
+      return { data: UserOutput.fromUser(user) };
     } catch (err) {
       this.logger.error(`user: createOrUpdateUser: ${err.message}`);
 
@@ -95,37 +102,23 @@ export class UserService {
     }
   }
 
-  async updateUser(params: {
-    where: Prisma.UserWhereUniqueInput;
-    data: Prisma.UserUpdateInput;
-  }): Promise<AppResult<User, string>> {
-    const { where, data } = params;
-
+  async getProfile(userId: string): Promise<AppResult<ProfileOutput, string>> {
     try {
-      const user = await this.prisma.user.update({
-        data,
-        where,
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
       });
 
-      return { data: user };
+      if (!user) {
+        this.logger.error(
+          `user: getProfile: user ${JSON.stringify(userId)} not found`,
+        );
+
+        return { err: 'user.getProfile.notFound' };
+      }
+
+      return { data: ProfileOutput.fromUser(user) };
     } catch (err) {
-      this.logger.error(`user: update: ${err.message}`);
-
-      return { err: 'common.serverError' };
-    }
-  }
-
-  async deleteUser(
-    where: Prisma.UserWhereUniqueInput,
-  ): Promise<AppResult<User, string>> {
-    try {
-      const user = await this.prisma.user.delete({
-        where,
-      });
-
-      return { data: user };
-    } catch (err) {
-      this.logger.error(`user: delete: ${err.message}`);
+      this.logger.error(`user: getProfile: ${err.message}`);
 
       return { err: 'common.serverError' };
     }
