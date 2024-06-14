@@ -19,14 +19,16 @@ export const errorMessages = {
     validationFailed: {
       status: HttpStatus.BAD_REQUEST,
       message:
-        'this message is representative of all validation error messages that depend on the class-validator library. Because we expect all validation errors to be caught at the front end, we do not specify it in Swagger',
+        'this message is representative of all validation error messages that depend on the class-validator library',
     },
   },
   user: {
-    create: {
-      incorrectAuthId: {
-        status: HttpStatus.BAD_REQUEST,
-        message: 'auth ID is incorrect',
+    create: {},
+    list: {},
+    getProfile: {
+      notFound: {
+        status: HttpStatus.NOT_FOUND,
+        message: 'user profile not found',
       },
     },
   },

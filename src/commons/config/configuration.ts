@@ -11,4 +11,7 @@ export default () => ({
       limit: parseInt(process.env.THROTTLE_LIMIT, 10) || 60,
     },
   },
+  redis: {
+    url: process.env.REDIS_URL || 'redis://localhost:6379/0',
+  },
 });

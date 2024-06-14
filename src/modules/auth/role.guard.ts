@@ -20,7 +20,11 @@ export class RolesGuard implements CanActivate {
     }
 
     const { authContext } = context.switchToHttp().getRequest();
-    const authCtx = AuthContextInfo.fromJsObject(authContext);
+    const authCtx = AuthContextInfo.fromJwtPayload(authContext);
+
+    if (!authCtx || !Array.isArray(authCtx.roles)) {
+      throw HttpResponse.error('common.invalidToken');
+    }
 
     if (requiredRoles.find((role) => authCtx.roles.includes(role))) {
       return true;

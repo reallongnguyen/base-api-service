@@ -1,28 +1,23 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  ParseIntPipe,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import HttpResponse from 'src/commons/models/HttpResponse';
 import { ErrorResponse } from 'src/commons/decorators/error-response.decorator';
-import { PaginatedSuccessResponse } from 'src/commons/decorators/paginated-list-success.decorator';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CreatedSuccessResponse } from 'src/commons/decorators/created-success.decorator';
 import { AuthGuard } from 'src/modules/auth/auth.guard';
 import { RolesGuard } from 'src/modules/auth/role.guard';
 import { AuthContext } from 'src/modules/auth/decorators/auth-context.decorator';
-import { UserService } from './user.service';
-import { UserCreateInput } from './dto/user.dto';
-import { User } from './models/User';
+import { Role } from '@prisma/client';
+import Collection from 'src/commons/models/Collection';
+import {
+  CreatedResponse,
+  OkResponse,
+  PaginatedResponse,
+} from 'src/commons/decorators/success-response.decorator';
+import { UserUpsertInput, UserService } from './user.service';
+import { UserCreateDto, UserDto } from './dto/user.dto';
+import { ProfileDto } from './dto/profile.dto';
 import AuthContextInfo from '../auth/models/auth-context-info.model';
 import { RequireAnyRoles } from '../auth/decorators/require-any-roles.decorator';
-import { Role } from '../auth/models/role.enum';
 
-// This is a example controller for testing the prisma client
 @Controller({
   path: 'users',
   version: '1',
@@ -35,21 +30,22 @@ export class UserController {
 
   @Post()
   @ApiOperation({
-    description: 'Create a new user with name and avatar URL',
-    summary: 'Create a new user',
+    description: 'Create a new user if not exist, otherwise update the user',
+    summary: 'Create or Update an user',
   })
-  @CreatedSuccessResponse(User)
+  @CreatedResponse(UserDto)
   @ErrorResponse('user.create', { hasValidationErr: true })
   async create(
-    @Body() userData: UserCreateInput,
+    @Body() userData: UserCreateDto,
     @AuthContext() authCtx: AuthContextInfo,
-  ) {
-    throw HttpResponse.error('user.create.incorrectAuthId');
+  ): Promise<HttpResponse<UserDto>> {
+    const userUpsertInput: UserUpsertInput = {
+      ...userData,
+      authId: authCtx.authId,
+    };
 
-    const { data: user, err } = await this.userService.createOrUpdateUser(
-      authCtx.authId,
-      userData,
-    );
+    const { data: user, err } =
+      await this.userService.createOrUpdateUser(userUpsertInput);
 
     if (err) {
       throw HttpResponse.error(err);
@@ -59,14 +55,14 @@ export class UserController {
   }
 
   @Get()
-  @RequireAnyRoles(Role.admin, Role.owner, Role.editor, Role.viewer)
+  @RequireAnyRoles(Role.admin)
   @ApiOperation({
-    description: 'Get list of user with pagination',
-    summary: 'Get list of user',
+    description: 'Filter user with pagination',
+    summary: 'List up users',
   })
-  @PaginatedSuccessResponse(User)
-  @ErrorResponse('user.list')
-  async list() {
+  @PaginatedResponse(UserDto)
+  @ErrorResponse('user.list', { hasValidationErr: true })
+  async list(): Promise<HttpResponse<Collection<UserDto>>> {
     const { data, err } = await this.userService.users({});
 
     if (err) {
@@ -76,35 +72,18 @@ export class UserController {
     return HttpResponse.ok(data);
   }
 
-  @Get('/me')
+  @Get('/profile')
+  @RequireAnyRoles(Role.user)
   @ApiOperation({
-    description: 'Get list of user with pagination',
-    summary: 'Get list of user',
+    description: 'Get the profile of authenticated user',
+    summary: 'Get my profile',
   })
-  @PaginatedSuccessResponse(User)
-  @ErrorResponse('user.me')
-  async getMe(@AuthContext() authCtx: AuthContextInfo) {
-    const { data, err } = await this.userService.user({
-      authId: authCtx.authId,
-    });
-
-    if (err) {
-      throw HttpResponse.error(err);
-    }
-
-    return HttpResponse.ok(data);
-  }
-
-  @Get('/:id')
-  @RequireAnyRoles(Role.admin, Role.editor)
-  @ApiOperation({
-    description: 'Get information of :id user',
-    summary: 'Get a user',
-  })
-  @PaginatedSuccessResponse(User)
-  @ErrorResponse('user.get')
-  async get(@Param('id', ParseIntPipe) id: number) {
-    const { data, err } = await this.userService.user({ id });
+  @OkResponse(ProfileDto)
+  @ErrorResponse('user.profile')
+  async getProfile(
+    @AuthContext() authCtx: AuthContextInfo,
+  ): Promise<HttpResponse<ProfileDto>> {
+    const { data, err } = await this.userService.getProfile(authCtx.userId);
 
     if (err) {
       throw HttpResponse.error(err);

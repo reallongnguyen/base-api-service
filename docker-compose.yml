@@ -82,16 +82,16 @@ services:
       # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_ENABLED="true"
       # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_URI="pg-functions://postgres/public/password_verification_attempt"
 
-  # redis:
-  #   container_name: redis
-  #   image: redis/redis-stack
-  #   restart: unless-stopped
-  #   ports:
-  #     - 6379:6379
-  #   # environment:
-  #   #   REDIS_ARGS: --requirepass ${REDIS_PASSWORD}
-  #   volumes:
-  #     - redis-data:/data
+  redis:
+    container_name: redis
+    image: redis/redis-stack
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    # environment:
+    #   REDIS_ARGS: --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
 
   # prometheus:
   #   container_name: prometheus
@@ -104,5 +104,5 @@ services:
 
 volumes:
   pg-data:
+  redis-data:
   # prometheus-data:
-  # redis-data:

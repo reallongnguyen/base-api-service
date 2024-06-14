@@ -1,8 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export interface Pagination {
+export class Pagination {
+  @ApiProperty({
+    type: 'number',
+    example: 20,
+  })
   limit: number;
+
+  @ApiProperty({
+    type: 'number',
+    example: 0,
+  })
   offset: number;
+
+  @ApiProperty({
+    type: 'number',
+    example: 100,
+  })
   total: number;
 }
 
@@ -14,11 +28,6 @@ export default class Collection<T> {
 
   @ApiProperty({
     description: 'Pagination information',
-    example: {
-      limit: 10,
-      offset: 0,
-      total: 100,
-    },
   })
   pagination: Pagination;
 }

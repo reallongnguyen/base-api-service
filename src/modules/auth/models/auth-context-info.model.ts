@@ -4,6 +4,7 @@ class AuthContextInfo {
   authId: string;
   email: string;
   phone: string;
+  userId?: string;
   roles: Role[];
   jwtPayload: {
     aud: string;
@@ -21,13 +22,13 @@ class AuthContextInfo {
     is_anonymous: boolean;
   };
 
-  static fromJsObject(obj: any): AuthContextInfo {
+  static fromJwtPayload(obj: any): AuthContextInfo {
     const authCtx = new AuthContextInfo();
 
     authCtx.authId = obj.sub;
     authCtx.email = obj.email;
     authCtx.phone = obj.phone;
-    authCtx.roles = obj.user_metadata?.roles || ['guest'];
+    authCtx.roles = obj.roles || [];
     authCtx.jwtPayload = obj;
 
     return authCtx;
