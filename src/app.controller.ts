@@ -1,12 +1,17 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { ConfigService } from '@nestjs/config';
+import HttpResponse from './commons/models/HttpResponse';
+import { version } from '../package.json';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private configService: ConfigService) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  get(): HttpResponse<Record<string, string>> {
+    return HttpResponse.ok({
+      ...this.configService.get<Record<string, string>>('app'),
+      version,
+    });
   }
 }

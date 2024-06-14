@@ -1,8 +1,10 @@
 export default () => ({
   nodeEnv: process.env.NODE_ENV || 'development',
-  appPort: parseInt(process.env.APP_PORT, 10) || 8000,
-  appName: process.env.APP_NAME || 'App',
-  appUrl: process.env.APP_URL || 'https://example.com',
+  app: {
+    name: process.env.APP_NAME || 'App',
+    port: parseInt(process.env.APP_PORT, 10) || 8000,
+    url: process.env.APP_URL || 'https://example.com',
+  },
   logLevel: process.env.LOG_LEVEL || 'info',
   security: {
     jwtSecret: process.env.JWT_SECRET || '',
