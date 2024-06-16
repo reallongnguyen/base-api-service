@@ -29,7 +29,7 @@ async function bootstrap() {
   // API docs
   const swaggerDocConfig = new DocumentBuilder()
     .addBearerAuth()
-    .setTitle(`${config.get<string>('appName')} API docs`)
+    .setTitle(`${config.get<string>('app.name')} API docs`)
     .setDescription('The API document is generated automatically')
     .setVersion(version)
     .build();
@@ -38,6 +38,6 @@ async function bootstrap() {
 
   SwaggerModule.setup('api', app, swaggerDoc);
 
-  await app.listen(config.get<string>('appPort'));
+  await app.listen(config.get<string>('app.port'));
 }
 bootstrap();

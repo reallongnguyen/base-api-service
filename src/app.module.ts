@@ -6,9 +6,10 @@ import { ConfigService } from '@nestjs/config';
 import { UserModule } from 'src/modules/user/user.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RedisClientOptions } from 'redis';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+import { AuthModule } from 'src/modules/auth/auth.module';
+import { HealthModule } from 'src/modules/health/health.module';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -35,11 +36,12 @@ import { AuthModule } from './modules/auth/auth.module';
         };
       },
     }),
+    EventEmitterModule.forRoot(),
     // Register business modules here
     AuthModule,
     UserModule,
+    HealthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
