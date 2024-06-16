@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import Collection from 'src/commons/models/Collection';
-import { AppResult } from 'src/commons/models/AppResult';
+import { AppResult, Collection } from 'src/common/models';
 import { Logger } from 'nestjs-pino';
 import { User } from './models/user.model';
 import { Role } from './models/role.model';

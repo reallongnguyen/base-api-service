@@ -32,4 +32,7 @@ export const errorMessages = {
       },
     },
   },
+  file: {
+    getUploadAvatarUrl: {},
+  },
 };

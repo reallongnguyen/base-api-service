@@ -7,12 +7,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import HttpResponse from 'src/commons/models/HttpResponse';
+import HttpResponse from 'src/common/models/HttpResponse';
 import { PrismaService } from 'src/prisma.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Logger } from 'nestjs-pino';
 import { Cache } from 'cache-manager';
-import AuthContextInfo from './models/auth-context-info.model';
+import { AuthContextInfo } from './models/auth-context-info.model';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

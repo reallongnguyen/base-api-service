@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import {
   HealthCheck,
   HealthCheckService,
@@ -6,14 +7,17 @@ import {
   PrismaHealthIndicator,
 } from '@nestjs/terminus';
 import { PrismaService } from 'src/prisma.service';
+import { CacheHealthIndicator } from './cache.health';
 
 @Controller('health')
+@ApiTags('app')
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
     private memory: MemoryHealthIndicator,
     private prisma: PrismaHealthIndicator,
     private prismaService: PrismaService,
+    private cache: CacheHealthIndicator,
   ) {}
 
   @Get()
@@ -22,6 +26,7 @@ export class HealthController {
     return this.health.check([
       () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
       () => this.prisma.pingCheck('database', this.prismaService),
+      () => this.cache.isHealthy('cache'),
     ]);
   }
 }

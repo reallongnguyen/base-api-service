@@ -5,7 +5,7 @@ import {
   ApiOkResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
-import SuccessResponseDto from 'src/commons/decorators/success-response.dto';
+import SuccessResponseDto from 'src/common/decorators/success-response.dto';
 import Collection from '../models/Collection';
 
 export const OkResponse = <DataDto extends Type<unknown>>(
