@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { AppResult, Collection } from 'src/common/models';
 import { Logger } from 'nestjs-pino';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { User } from './models/user.model';
 import { Role } from './models/role.model';
 
@@ -46,6 +47,7 @@ export class UserService {
   constructor(
     private prisma: PrismaService,
     private logger: Logger,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async users(
@@ -92,6 +94,8 @@ export class UserService {
         },
         update: input,
       });
+
+      this.eventEmitter.emit('profile.updated', user);
 
       return { data: UserOutput.fromUser(user) };
     } catch (err) {

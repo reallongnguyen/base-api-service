@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsOptional,
-  IsString,
-  IsUrl,
-  Length,
-  MaxLength,
-} from 'class-validator';
+import { IsOptional, IsString, Length, MaxLength } from 'class-validator';
 import { User } from '../models/user.model';
 import { Role } from '../models/role.model';
 
@@ -29,7 +23,6 @@ export class UserCreateDto {
   })
   @IsOptional()
   @IsString()
-  @IsUrl()
   @MaxLength(256)
   avatar?: string;
 }

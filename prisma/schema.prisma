@@ -8,6 +8,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator json {
+  provider  = "prisma-json-types-generator"
+  namespace = "PrismaJson"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -28,4 +33,39 @@ model User {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@map("users")
+}
+
+enum NotificationType {
+  post
+  like
+  cmt
+  rep
+  updt
+}
+
+model Notification {
+  id           String           @id @default(uuid())
+  key          String           @unique
+  type         NotificationType
+  userId       String           @map("user_id")
+  /// [NotificationObjectType]
+  subjects     Json[]
+  subjectCount Int              @map("subject_count")
+  /// [NotificationObjectType]
+  diObject     Json?            @map("di_object")
+  /// [NotificationObjectType]
+  inObject     Json?            @map("in_object")
+  /// [NotificationObjectType]
+  prObject     Json?            @map("pr_object")
+  text         String
+  /// [NotificationDecoratorType]
+  decorators   Json[]
+  link         String?
+  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  readAt       DateTime?        @updatedAt @map("read_at") @db.Timestamptz()
+
+  @@index([userId], type: Hash)
+  @@index([userId, readAt])
+  @@map("notifications")
 }
