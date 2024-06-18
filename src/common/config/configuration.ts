@@ -16,4 +16,9 @@ export default () => ({
   redis: {
     url: process.env.REDIS_URL || 'redis://localhost:6379/0',
   },
+  gcp: {
+    bucket: {
+      userAsset: process.env.USER_ASSET_BUCKET || 'base101-dev01-user-asset',
+    },
+  },
 });

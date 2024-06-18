@@ -1,22 +1,23 @@
 import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import HttpResponse from 'src/commons/models/HttpResponse';
-import { ErrorResponse } from 'src/commons/decorators/error-response.decorator';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthGuard } from 'src/modules/auth/auth.guard';
-import { RolesGuard } from 'src/modules/auth/role.guard';
-import { AuthContext } from 'src/modules/auth/decorators/auth-context.decorator';
-import { Role } from '@prisma/client';
-import Collection from 'src/commons/models/Collection';
+import { HttpResponse, Collection } from 'src/common/models';
 import {
+  ErrorResponse,
   CreatedResponse,
   OkResponse,
   PaginatedResponse,
-} from 'src/commons/decorators/success-response.decorator';
+} from 'src/common/decorators';
+import {
+  AuthContextInfo,
+  RequireAnyRoles,
+  AuthContext,
+  RolesGuard,
+  AuthGuard,
+  Role,
+} from 'src/common/auth';
 import { UserUpsertInput, UserService } from './user.service';
 import { UserCreateDto, UserDto } from './dto/user.dto';
 import { ProfileDto } from './dto/profile.dto';
-import AuthContextInfo from '../auth/models/auth-context-info.model';
-import { RequireAnyRoles } from '../auth/decorators/require-any-roles.decorator';
 
 @Controller({
   path: 'users',

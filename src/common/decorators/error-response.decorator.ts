@@ -1,9 +1,9 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiExtraModels, ApiResponse } from '@nestjs/swagger';
 import * as lodash from 'lodash';
-import { errorMessages } from 'src/commons/models/messages/errorMessage';
-import FailResponseDto from 'src/commons/decorators/fail-response.dto';
-import HttpResponse, { AppError } from 'src/commons/models/HttpResponse';
+import { errorMessages } from 'src/common/models/messages/errorMessage';
+import FailResponseDto from 'src/common/decorators/fail-response.dto';
+import HttpResponse, { AppError } from 'src/common/models/HttpResponse';
 
 export const ErrorResponse = (
   errorGroup: string,

@@ -1,6 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 
-import AppResponse from 'src/commons/models/HttpResponse';
+import AppResponse from 'src/common/models/HttpResponse';
 
 export default class FailResponseDto extends OmitType(AppResponse, [
   'data',

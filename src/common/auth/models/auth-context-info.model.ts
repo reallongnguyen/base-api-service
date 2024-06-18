@@ -1,6 +1,6 @@
 import { Role } from './role.enum';
 
-class AuthContextInfo {
+export class AuthContextInfo {
   authId: string;
   email: string;
   phone: string;
@@ -34,5 +34,3 @@ class AuthContextInfo {
     return authCtx;
   }
 }
-
-export default AuthContextInfo;
