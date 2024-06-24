@@ -12,6 +12,7 @@ declare global {
       type: string;
       offset: string;
       length: string;
+      class: string;
     };
   }
 }

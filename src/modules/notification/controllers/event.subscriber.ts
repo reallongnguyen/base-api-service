@@ -5,29 +5,29 @@ import {
   NotificationCreatedEvent,
   ProfileUpdatedEvent,
 } from 'src/common/models';
-import { NotificationService } from './notification.service';
+import { NotificationProducerService } from '../usecases/notification-producer.service';
 
 @Injectable()
-export class NotificationSubscriber {
+export class EventSubscriber {
   constructor(
     private logger: Logger,
-    private notificationService: NotificationService,
+    private eventService: NotificationProducerService,
   ) {}
 
   // demo notification
   @OnEvent('profile.updated')
   handleProfileUpdatedEvent(payload: ProfileUpdatedEvent) {
-    this.logger.debug(
-      `notification: subscriber: profile.updated: ${JSON.stringify(payload)}`,
+    this.logger.verbose(
+      `notification: event.subscriber: profile.updated: ${JSON.stringify(payload)}`,
     );
 
-    this.notificationService.upsertUpdateProfileNotification(payload);
+    this.eventService.handleProfileUpdated(payload);
   }
 
   @OnEvent('notification.created')
   handleNotificationCreatedEvent(payload: NotificationCreatedEvent) {
-    this.logger.debug(
-      `notification: subscriber: notification.created: ${JSON.stringify(payload)}`,
+    this.logger.verbose(
+      `notification: event.subscriber: notification.created: ${JSON.stringify(payload)}`,
     );
 
     // send notice via mqtt

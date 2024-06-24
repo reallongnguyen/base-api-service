@@ -36,11 +36,12 @@ model User {
 }
 
 enum NotificationType {
-  post
-  like
-  cmt
-  rep
-  updt
+  publishPost
+  likePost
+  commentPost
+  likeComment
+  replyComment
+  updateProfile
 }
 
 model Notification {

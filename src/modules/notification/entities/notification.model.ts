@@ -14,6 +14,7 @@ export class NotificationDecorator
   type: string;
   offset: string;
   length: string;
+  class: string;
 }
 
 export class Notification implements NotificationIf {

@@ -21,4 +21,10 @@ export default () => ({
       userAsset: process.env.USER_ASSET_BUCKET || 'base101-dev01-user-asset',
     },
   },
+  mutex: {
+    redis1: {
+      host: 'localhost',
+      port: 6379,
+    },
+  },
 });
