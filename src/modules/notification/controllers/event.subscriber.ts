@@ -17,7 +17,7 @@ export class EventSubscriber {
   // demo notification
   @OnEvent('profile.updated')
   handleProfileUpdatedEvent(payload: ProfileUpdatedEvent) {
-    this.logger.verbose(
+    this.logger.debug(
       `notification: event.subscriber: profile.updated: ${JSON.stringify(payload)}`,
     );
 
@@ -26,7 +26,7 @@ export class EventSubscriber {
 
   @OnEvent('notification.created')
   handleNotificationCreatedEvent(payload: NotificationCreatedEvent) {
-    this.logger.verbose(
+    this.logger.debug(
       `notification: event.subscriber: notification.created: ${JSON.stringify(payload)}`,
     );
 

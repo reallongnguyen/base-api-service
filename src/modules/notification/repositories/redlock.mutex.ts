@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redlock, { RedlockAbortSignal } from 'redlock';
-import Client from 'ioredis';
+import Client, { RedisOptions } from 'ioredis';
+import { isEqual } from 'lodash';
 import { Mutex } from '../usecases/interfaces/mutex.interface';
 
 @Injectable()
@@ -10,12 +11,24 @@ export class RedlockMutex implements Mutex {
   lockDuration = 5000;
 
   constructor(private config: ConfigService) {
-    const redis1 = new Client({
-      host: config.get<string>('mutex.redis1.host'),
-      port: config.get<number>('mutex.redis1.port'),
-    });
+    const redis1Cfg = config.get<RedisOptions>('mutex.redis1');
+    const redis2Cfg = config.get<RedisOptions>('mutex.redis2');
+    const redis3Cfg = config.get<RedisOptions>('mutex.redis3');
 
-    this.redlock = new Redlock([redis1], {
+    const redisClients: Client[] = [];
+
+    const redis1 = new Client(redis1Cfg);
+    redisClients.push(redis1);
+
+    if (!isEqual(redis1Cfg, redis2Cfg) && !isEqual(redis2Cfg, redis3Cfg)) {
+      const redis2 = new Client(redis2Cfg);
+      redisClients.push(redis2);
+
+      const redis3 = new Client(redis3Cfg);
+      redisClients.push(redis3);
+    }
+
+    this.redlock = new Redlock(redisClients, {
       // The expected clock drift; for more details see:
       // http://redis.io/topics/distlock
       driftFactor: 0.01, // multiplied by lock ttl to determine drift time
