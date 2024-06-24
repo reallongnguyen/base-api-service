@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     volumes:
       - pg-data:/var/lib/postgresql/data
-      - ./deployments/docker/volumes/db/auth.sql:/docker-entrypoint-initdb.d/init-scripts/99-auth.sql:Z
+      - ./deployments/docker/volumes/db/auth.sql:/docker-entrypoint-initdb.d/auth.sql
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
