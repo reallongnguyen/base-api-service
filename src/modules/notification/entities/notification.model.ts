@@ -11,10 +11,11 @@ export class NotificationObject implements PrismaJson.NotificationObjectType {
 export class NotificationDecorator
   implements PrismaJson.NotificationDecoratorType
 {
-  type: string;
   offset: number;
   length: number;
   class: string;
+  type?: string;
+  link?: string;
 }
 
 export class Notification implements NotificationIf {

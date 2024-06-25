@@ -9,10 +9,11 @@ declare global {
       image?: string;
     };
     type NotificationDecoratorType = {
-      type: string;
       offset: number;
       length: number;
       class: string;
+      type?: string;
+      link?: string;
     };
   }
 }

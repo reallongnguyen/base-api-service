@@ -65,15 +65,6 @@ export class NotificationListQuery {
 
 export class NotificationDecoratorOutput extends NotificationDecorator {
   @ApiProperty({
-    description:
-      'The type of decorator that relate to original object such as user, post, group...',
-    type: 'string',
-    example: 'user',
-    required: true,
-  })
-  type: string;
-
-  @ApiProperty({
     description: 'The index of the first character that applied decorator',
     type: 'number',
     example: 0,
@@ -97,6 +88,23 @@ export class NotificationDecoratorOutput extends NotificationDecorator {
     required: true,
   })
   class: string;
+
+  @ApiProperty({
+    description:
+      'The type of decorator that relate to original object such as user, post, group...',
+    type: 'string',
+    example: 'user',
+    required: false,
+  })
+  type?: string;
+
+  @ApiProperty({
+    description: 'The link relate to this object',
+    type: 'string',
+    example: '/users/d0e7beaa-f466-49c3-b00d-20e89a72abc8/profile',
+    required: false,
+  })
+  link?: string;
 }
 
 export class NotificationOutput
