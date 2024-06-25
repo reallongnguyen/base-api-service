@@ -12,8 +12,8 @@ export class NotificationDecorator
   implements PrismaJson.NotificationDecoratorType
 {
   type: string;
-  offset: string;
-  length: string;
+  offset: number;
+  length: number;
   class: string;
 }
 

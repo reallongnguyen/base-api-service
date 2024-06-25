@@ -32,7 +32,7 @@ export class NotificationConsumerService {
 
     if (!notiMsgTemp) {
       this.logger.error(
-        `notification: service: upsertNotification: template notificationTemplate.vi.${inputClone.type} not found`,
+        `notification: notification-consumer.service: upsertNotification: template notificationTemplate.vi.${inputClone.type} not found`,
       );
 
       return { err: 'notification.templateNotFound' };
@@ -43,7 +43,7 @@ export class NotificationConsumerService {
         [inputClone.key],
         async (signal): Promise<AppResult<Notification, string>> => {
           this.logger.verbose(
-            `notification: service: upsertNotification: perform key ${inputClone.key}`,
+            `notification: notification-consumer.service: upsertNotification: perform key ${inputClone.key}`,
           );
 
           try {
@@ -110,7 +110,7 @@ export class NotificationConsumerService {
             return { data: notification as Notification };
           } catch (err) {
             this.logger.error(
-              `notification: service: upsertNotification: ${err.message}`,
+              `notification: notification-consumer.service: upsertNotification: ${err.message}`,
             );
 
             return { err: 'common.serverError' };
@@ -119,7 +119,7 @@ export class NotificationConsumerService {
       )
       .catch(async (err) => {
         this.logger.verbose(
-          `notification: service: upsertNotification: mutex: ${err.message}`,
+          `notification: notification-consumer.service: upsertNotification: mutex: ${err.message}`,
         );
 
         await this.notiQueue.add(inputClone, {

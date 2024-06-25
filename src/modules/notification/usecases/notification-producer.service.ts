@@ -45,7 +45,7 @@ export class NotificationProducerService {
       return { data: '' };
     } catch (err) {
       this.logger.error(
-        `notification: event.service: handleProfileUpdated: ${err.message}`,
+        `notification: notification-producer.service: handleProfileUpdated: ${err.message}`,
       );
 
       return { err: 'serverError' };

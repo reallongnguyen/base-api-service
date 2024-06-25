@@ -6,15 +6,17 @@ import { EventSubscriber } from './controllers/event.subscriber';
 import { NotificationProcessor } from './controllers/notification.processor';
 import { NotificationProducerService } from './usecases/notification-producer.service';
 import { RedlockMutex } from './repositories/redlock.mutex';
+import { NotificationService } from './usecases/notification.service';
 
 @Module({
   imports: [BullModule.registerQueue({ name: 'notification' })],
   controllers: [NotificationController],
   providers: [
     EventSubscriber,
-    NotificationProducerService,
     NotificationConsumerService,
+    NotificationService,
     NotificationProcessor,
+    NotificationProducerService,
     RedlockMutex,
   ],
 })
