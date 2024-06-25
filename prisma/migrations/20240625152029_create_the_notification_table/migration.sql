@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('post', 'like', 'cmt', 'rep', 'updt');
+CREATE TYPE "NotificationType" AS ENUM ('publishPost', 'likePost', 'commentPost', 'likeComment', 'replyComment', 'updateProfile');
 
 -- CreateTable
 CREATE TABLE "notifications" (
@@ -9,21 +9,21 @@ CREATE TABLE "notifications" (
     "user_id" TEXT NOT NULL,
     "subjects" JSONB[],
     "subject_count" INTEGER NOT NULL,
-    "di_object" JSONB NOT NULL,
-    "in_object" JSONB NOT NULL,
-    "pr_object" JSONB NOT NULL,
+    "di_object" JSONB,
+    "in_object" JSONB,
+    "pr_object" JSONB,
     "text" TEXT NOT NULL,
     "decorators" JSONB[],
-    "link" TEXT NOT NULL,
+    "link" TEXT,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
-    "read_at" TIMESTAMPTZ NOT NULL,
+    "read_at" TIMESTAMPTZ,
 
     CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE INDEX "notifications_key_read_at_idx" ON "notifications"("key", "read_at" DESC);
+CREATE UNIQUE INDEX "notifications_key_key" ON "notifications"("key");
 
 -- CreateIndex
 CREATE INDEX "notifications_user_id_idx" ON "notifications" USING HASH ("user_id");
