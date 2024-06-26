@@ -33,4 +33,14 @@ export class EventSubscriber {
     // send notice via mqtt
     // send push
   }
+
+  @OnEvent('notification.updated')
+  handleNotificationUpdatedEvent(payload: NotificationCreatedEvent) {
+    this.logger.debug(
+      `notification: event.subscriber: notification.updated: ${JSON.stringify(payload)}`,
+    );
+
+    // send notice via mqtt
+    // send push
+  }
 }

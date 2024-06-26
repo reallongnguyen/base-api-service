@@ -15,18 +15,19 @@ CREATE TABLE "notifications" (
     "text" TEXT NOT NULL,
     "decorators" JSONB[],
     "link" TEXT,
+    "notification_time" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "read_at" TIMESTAMPTZ,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ NOT NULL,
-    "read_at" TIMESTAMPTZ,
 
     CONSTRAINT "notifications_pkey" PRIMARY KEY ("id")
 );
-
--- CreateIndex
-CREATE UNIQUE INDEX "notifications_key_key" ON "notifications"("key");
 
 -- CreateIndex
 CREATE INDEX "notifications_user_id_idx" ON "notifications" USING HASH ("user_id");
 
 -- CreateIndex
 CREATE INDEX "notifications_user_id_read_at_idx" ON "notifications"("user_id", "read_at");
+
+-- CreateIndex
+CREATE INDEX "notifications_key_idx" ON "notifications" USING HASH ("key");

@@ -111,7 +111,7 @@ export class NotificationOutput
   implements
     Pick<
       Notification,
-      'id' | 'text' | 'decorators' | 'link' | 'updatedAt' | 'readAt'
+      'id' | 'text' | 'decorators' | 'link' | 'notificationTime' | 'readAt'
     >
 {
   @ApiProperty({
@@ -146,12 +146,12 @@ export class NotificationOutput
   link: string;
 
   @ApiProperty({
-    description: 'The updated timestamp',
+    description: 'The timestamp of the notification',
     type: 'string',
     example: '2024-06-25T03:10:20Z',
     required: true,
   })
-  updatedAt: Date;
+  notificationTime: Date;
 
   @ApiProperty({
     description:
@@ -169,7 +169,7 @@ export class NotificationOutput
     notiOutput.text = noti.text;
     notiOutput.decorators = noti.decorators;
     notiOutput.link = noti.link;
-    notiOutput.updatedAt = noti.updatedAt;
+    notiOutput.notificationTime = noti.notificationTime;
     notiOutput.readAt = noti.readAt;
 
     return notiOutput;

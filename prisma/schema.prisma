@@ -45,28 +45,30 @@ enum NotificationType {
 }
 
 model Notification {
-  id           String           @id @default(uuid())
-  key          String           @unique
-  type         NotificationType
-  userId       String           @map("user_id")
+  id               String           @id @default(uuid())
+  key              String
+  type             NotificationType
+  userId           String           @map("user_id")
   /// [NotificationObjectType]
-  subjects     Json[]
-  subjectCount Int              @map("subject_count")
+  subjects         Json[]
+  subjectCount     Int              @map("subject_count")
   /// [NotificationObjectType]
-  diObject     Json?            @map("di_object")
+  diObject         Json?            @map("di_object")
   /// [NotificationObjectType]
-  inObject     Json?            @map("in_object")
+  inObject         Json?            @map("in_object")
   /// [NotificationObjectType]
-  prObject     Json?            @map("pr_object")
-  text         String
+  prObject         Json?            @map("pr_object")
+  text             String
   /// [NotificationDecoratorType]
-  decorators   Json[]
-  link         String?
-  createdAt    DateTime         @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt    DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
-  readAt       DateTime?        @updatedAt @map("read_at") @db.Timestamptz()
+  decorators       Json[]
+  link             String?
+  notificationTime DateTime         @default(now()) @map("notification_time") @db.Timestamptz()
+  readAt           DateTime?        @map("read_at") @db.Timestamptz()
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@index([userId], type: Hash)
   @@index([userId, readAt])
+  @@index([key], type: Hash)
   @@map("notifications")
 }

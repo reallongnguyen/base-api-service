@@ -8,6 +8,7 @@ import { AppResult } from 'src/common/models';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { cloneDeep } from 'lodash';
+import dayjs from 'dayjs';
 import { notificationTemplate } from '../entities/notification.template';
 import { TemplateHelper } from './helpers/template.helper';
 import { NotificationCreateInput } from '../controllers/dto/notification.dto';
@@ -47,8 +48,13 @@ export class NotificationConsumerService {
           );
 
           try {
-            const existNoti = await this.prismaService.notification.findUnique({
-              where: { key: inputClone.key },
+            const existNoti = await this.prismaService.notification.findFirst({
+              where: {
+                key: inputClone.key,
+                readAt: null,
+                notificationTime: { gte: dayjs().add(-30, 'minutes').toDate() },
+              },
+              orderBy: { notificationTime: 'desc' },
             });
 
             if (existNoti) {
@@ -92,20 +98,30 @@ export class NotificationConsumerService {
             notiCreatedInput.decorators =
               TemplateHelper.makeDecorator(textWithDecorator);
 
-            const notification = await this.prismaService.notification.upsert({
-              where: { key: inputClone.key },
-              create: notiCreatedInput,
-              update: {
-                subjects: notiCreatedInput.subjects,
-                subjectCount: notiCreatedInput.subjectCount,
-                text: notiCreatedInput.text,
-                decorators: notiCreatedInput.decorators,
-                link: notiCreatedInput.link,
-                readAt: null,
-              },
-            });
+            let notification: Notification;
 
-            this.eventEmitter.emit('notification.created', notification);
+            if (existNoti) {
+              notification = await this.prismaService.notification.update({
+                where: { id: existNoti.id },
+                data: {
+                  subjects: notiCreatedInput.subjects,
+                  subjectCount: notiCreatedInput.subjectCount,
+                  text: notiCreatedInput.text,
+                  decorators: notiCreatedInput.decorators,
+                  link: notiCreatedInput.link,
+                  notificationTime: new Date(),
+                  readAt: null,
+                },
+              });
+
+              this.eventEmitter.emit('notification.updated', notification);
+            } else {
+              notification = await this.prismaService.notification.create({
+                data: notiCreatedInput,
+              });
+
+              this.eventEmitter.emit('notification.created', notification);
+            }
 
             return { data: notification as Notification };
           } catch (err) {

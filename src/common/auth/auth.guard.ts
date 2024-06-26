@@ -75,9 +75,11 @@ export class AuthGuard implements CanActivate {
         authCtx.userId = user.id;
       }
 
-      // save authCtx to the cache
-      const ttl = authCtx.jwtPayload.exp * 1000 - Date.now();
-      await this.cacheManager.set(authCtxKey, authCtx, ttl);
+      // save authCtx to the cache if JWT have full information
+      if (user) {
+        const ttl = authCtx.jwtPayload.exp * 1000 - Date.now();
+        await this.cacheManager.set(authCtxKey, authCtx, ttl);
+      }
 
       request.authContext = authCtx;
     } catch (err) {

@@ -22,8 +22,10 @@ export class NotificationService {
         findManyArgsClone.take = 20;
       }
 
-      const notifications =
-        await this.prismaService.notification.findMany(findManyArgsClone);
+      const notifications = await this.prismaService.notification.findMany({
+        ...findManyArgsClone,
+        orderBy: [{ notificationTime: 'desc', ...findManyArgsClone.orderBy }],
+      });
 
       const total = await this.prismaService.notification.count({
         where: findManyArgsClone.where,
@@ -59,6 +61,7 @@ export class NotificationService {
         where: {
           userId,
           id: notificationId,
+          readAt: null,
         },
         data: {
           readAt: new Date(),

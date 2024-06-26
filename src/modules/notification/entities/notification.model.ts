@@ -31,7 +31,8 @@ export class Notification implements NotificationIf {
   text: string;
   decorators: NotificationDecorator[];
   link: string;
+  notificationTime: Date;
+  readAt: Date;
   createdAt: Date;
   updatedAt: Date;
-  readAt: Date;
 }
