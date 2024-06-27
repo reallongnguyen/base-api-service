@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigService } from '@nestjs/config';
 import { NotificationController } from './controllers/notification.controller';
 import { NotificationConsumerService } from './usecases/notification-consumer.service';
 import { EventSubscriber } from './controllers/event.subscriber';
@@ -12,11 +13,14 @@ import { NotificationService } from './usecases/notification.service';
 @Module({
   imports: [
     BullModule.registerQueue({ name: 'notification' }),
-    ClientsModule.register([
+    ClientsModule.registerAsync([
       {
+        inject: [ConfigService],
         name: 'notification_mqtt_client',
-        transport: Transport.MQTT,
-        options: { url: process.env.MQTT_URL },
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.MQTT,
+          options: { url: configService.get<string>('notification.mqttUrl') },
+        }),
       },
     ]),
   ],

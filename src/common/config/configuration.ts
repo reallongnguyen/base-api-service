@@ -35,4 +35,9 @@ export default () => ({
       port: parseInt(process.env.MUTEX_REDIS3_PORT, 10) || 6379,
     },
   },
+  notification: {
+    mqttUrl: process.env.NOTIFICATION_MQTT_URL || 'mqtt://localhost:1883',
+    mergeNotificationThreshold:
+      parseInt(process.env.NOTIFICATION_MERGE_THRESHOLD, 10) || 1800,
+  },
 });

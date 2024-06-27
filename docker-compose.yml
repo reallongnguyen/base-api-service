@@ -93,8 +93,8 @@ services:
     volumes:
       - redis-data:/data
 
-  mqtt:
-    container_name: mqtt
+  mqtt01:
+    container_name: mqtt01
     image: emqx:latest
     restart: unless-stopped
     ports:
@@ -104,10 +104,38 @@ services:
       - 8083:8083
       - 8084:8084
     volumes:
-      - vol-emqx-data:/opt/emqx/data
-      - vol-emqx-log:/opt/emqx/log
+      - vol-emqx01-data:/opt/emqx/data
+      - vol-emqx01-log:/opt/emqx/log
     environment:
-      - 'EMQX_NODE__NAME=emqx@node1.emqx.io'
+      - 'EMQX_NODE__NAME=emqx@node01.emqx.io'
+      - 'EMQX_CLUSTER__DISCOVERY_STRATEGY=static'
+      - 'EMQX_CLUSTER__STATIC__SEEDS=[emqx@node01.emqx.io, emqx@node02.emqx.io]'
+    networks:
+      emqx-bridge:
+        aliases:
+          - node01.emqx.io
+
+  mqtt02:
+    container_name: mqtt02
+    image: emqx:latest
+    restart: unless-stopped
+    ports:
+      - 28083:18083
+      - 2883:1883
+      - 9883:8883
+      - 9083:8083
+      - 9084:8084
+    volumes:
+      - vol-emqx02-data:/opt/emqx/data
+      - vol-emqx02-log:/opt/emqx/log
+    environment:
+      - 'EMQX_NODE__NAME=emqx@node02.emqx.io'
+      - 'EMQX_CLUSTER__DISCOVERY_STRATEGY=static'
+      - 'EMQX_CLUSTER__STATIC__SEEDS=[emqx@node01.emqx.io, emqx@node02.emqx.io]'
+    networks:
+      emqx-bridge:
+        aliases:
+          - node02.emqx.io
 
   # prometheus:
   #   container_name: prometheus
@@ -121,6 +149,12 @@ services:
 volumes:
   pg-data:
   redis-data:
-  vol-emqx-data:
-  vol-emqx-log:
+  vol-emqx01-data:
+  vol-emqx01-log:
+  vol-emqx02-data:
+  vol-emqx02-log:
   # prometheus-data:
+
+networks:
+  emqx-bridge:
+    driver: bridge

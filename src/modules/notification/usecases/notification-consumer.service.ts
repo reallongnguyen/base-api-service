@@ -9,6 +9,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { cloneDeep } from 'lodash';
 import dayjs from 'dayjs';
+import { ConfigService } from '@nestjs/config';
 import { notificationTemplate } from '../entities/notification.template';
 import { TemplateHelper } from './helpers/template.helper';
 import { NotificationCreateInput } from '../controllers/dto/notification.dto';
@@ -19,6 +20,7 @@ import { Notification } from '../entities/notification.model';
 export class NotificationConsumerService {
   constructor(
     private logger: Logger,
+    private configService: ConfigService,
     private eventEmitter: EventEmitter2,
     private prismaService: PrismaService,
     private mutex: RedlockMutex,
@@ -47,12 +49,20 @@ export class NotificationConsumerService {
             `notification: notification-consumer.service: upsertNotification: perform key ${inputClone.key}`,
           );
 
+          const mergeNotificationThreshold = this.configService.get<string>(
+            'notification.mergeNotificationThreshold',
+          );
+
           try {
             const existNoti = await this.prismaService.notification.findFirst({
               where: {
                 key: inputClone.key,
                 readAt: null,
-                notificationTime: { gte: dayjs().add(-30, 'minutes').toDate() },
+                notificationTime: {
+                  gte: dayjs()
+                    .add(-mergeNotificationThreshold, 'seconds')
+                    .toDate(),
+                },
               },
               orderBy: { notificationTime: 'desc' },
             });
