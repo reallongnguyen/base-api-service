@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { NotificationController } from './controllers/notification.controller';
 import { NotificationConsumerService } from './usecases/notification-consumer.service';
 import { EventSubscriber } from './controllers/event.subscriber';
@@ -9,7 +10,16 @@ import { RedlockMutex } from './repositories/redlock.mutex';
 import { NotificationService } from './usecases/notification.service';
 
 @Module({
-  imports: [BullModule.registerQueue({ name: 'notification' })],
+  imports: [
+    BullModule.registerQueue({ name: 'notification' }),
+    ClientsModule.register([
+      {
+        name: 'notification_mqtt_client',
+        transport: Transport.MQTT,
+        options: { url: process.env.MQTT_URL },
+      },
+    ]),
+  ],
   controllers: [NotificationController],
   providers: [
     EventSubscriber,

@@ -93,6 +93,22 @@ services:
     volumes:
       - redis-data:/data
 
+  mqtt:
+    container_name: mqtt
+    image: emqx:latest
+    restart: unless-stopped
+    ports:
+      - 18083:18083
+      - 1883:1883
+      - 8883:8883
+      - 8083:8083
+      - 8084:8084
+    volumes:
+      - vol-emqx-data:/opt/emqx/data
+      - vol-emqx-log:/opt/emqx/log
+    environment:
+      - 'EMQX_NODE__NAME=emqx@node1.emqx.io'
+
   # prometheus:
   #   container_name: prometheus
   #   image: prom/prometheus
@@ -105,4 +121,6 @@ services:
 volumes:
   pg-data:
   redis-data:
+  vol-emqx-data:
+  vol-emqx-log:
   # prometheus-data:

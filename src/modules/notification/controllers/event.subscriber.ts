@@ -1,17 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Logger } from 'nestjs-pino';
-import {
-  NotificationCreatedEvent,
-  ProfileUpdatedEvent,
-} from 'src/common/models';
+import { ProfileUpdatedEvent } from 'src/common/models';
+import { ClientProxy, MqttRecordBuilder } from '@nestjs/microservices';
 import { NotificationProducerService } from '../usecases/notification-producer.service';
+import { NotificationOutput } from './dto/notification.dto';
+import { Notification } from '../entities/notification.model';
 
 @Injectable()
 export class EventSubscriber {
   constructor(
     private logger: Logger,
     private eventService: NotificationProducerService,
+    @Inject('notification_mqtt_client') private mqttClient: ClientProxy,
   ) {}
 
   // demo notification
@@ -25,22 +26,42 @@ export class EventSubscriber {
   }
 
   @OnEvent('notification.created')
-  handleNotificationCreatedEvent(payload: NotificationCreatedEvent) {
+  handleNotificationCreatedEvent(payload: Notification) {
     this.logger.debug(
       `notification: event.subscriber: notification.created: ${JSON.stringify(payload)}`,
     );
 
     // send notice via mqtt
+    const notiOutput = NotificationOutput.from(payload);
+    const record = new MqttRecordBuilder(notiOutput).setQoS(1).build();
+    const receivedNotificationTopic = this.getReceivedNotificationTopic(
+      payload.userId,
+    );
+
+    this.mqttClient.send(receivedNotificationTopic, record).subscribe();
+
     // send push
   }
 
   @OnEvent('notification.updated')
-  handleNotificationUpdatedEvent(payload: NotificationCreatedEvent) {
+  handleNotificationUpdatedEvent(payload: Notification) {
     this.logger.debug(
       `notification: event.subscriber: notification.updated: ${JSON.stringify(payload)}`,
     );
 
     // send notice via mqtt
+    const notiOutput = NotificationOutput.from(payload);
+    const record = new MqttRecordBuilder(notiOutput).setQoS(1).build();
+    const receivedNotificationTopic = this.getReceivedNotificationTopic(
+      payload.userId,
+    );
+
+    this.mqttClient.send(receivedNotificationTopic, record).subscribe();
+
     // send push
+  }
+
+  getReceivedNotificationTopic(userId: string) {
+    return `users/${userId}/received-notification`;
   }
 }

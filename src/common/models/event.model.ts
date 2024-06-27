@@ -3,11 +3,3 @@ export interface ProfileUpdatedEvent {
   name: string;
   avatar?: string;
 }
-
-export interface NotificationCreatedEvent {
-  id: string;
-  type: string;
-  userId: string;
-  text: string;
-  decorators: PrismaJson.NotificationDecoratorType;
-}
