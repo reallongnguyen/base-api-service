@@ -14,7 +14,6 @@ const extractAttr = (attrString: string) => {
 };
 
 export class TemplateHelper {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   static makeDecorator(text: string) {
     const regex = /<\/?d\s?(.*?)>/;
     const decorators: PrismaJson.NotificationDecoratorType[] = [];
