@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AppError, Collection } from 'src/common/models';
 import { Prisma } from '@prisma/client';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from 'src/common/prisma/prisma.service';
 import { Logger } from 'nestjs-pino';
 import { cloneDeep } from 'lodash';
 import { NotificationOutput } from '../controllers/dto/notification.dto';

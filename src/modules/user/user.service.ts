@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from 'src/common/prisma/prisma.service';
 import { Collection } from 'src/common/models';
 import { AppError } from 'src/common/models/AppError';
 import { Logger } from 'nestjs-pino';

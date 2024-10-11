@@ -10,6 +10,7 @@ import { LoggerModule } from './logger/logger.module';
 import { AppConfigModule } from './config/config.module';
 import { AuthModule } from './auth/auth.module';
 import { HealthModule } from '../modules/health/health.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { HealthModule } from '../modules/health/health.module';
     EventEmitterModule.forRoot(),
     AuthModule,
     HealthModule,
+    PrismaModule,
   ],
 })
 export class CommonModule {}
