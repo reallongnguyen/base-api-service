@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { GetSignedUrlConfig, Storage } from '@google-cloud/storage';
 import { Logger } from 'nestjs-pino';
-import { AppResult } from 'src/common/models';
 import { ConfigService } from '@nestjs/config';
+import { AppError } from 'src/common/models/AppError';
 import { UploadUrlDto } from './dto/upload-url.dto';
 import { AvatarMimeType } from './models/file-type.enum';
 
@@ -19,7 +19,7 @@ export class FileService {
     userId: string,
     mimeType: AvatarMimeType,
     fileSize: number,
-  ): Promise<AppResult<UploadUrlDto, string>> {
+  ): Promise<UploadUrlDto> {
     const bucketName = this.configService.get<string>('gcp.bucket.userAsset');
     const fileExtension = mimeType.split('/')[1];
     const fileName = `${userId}/profile/avatar.${fileExtension}`;
@@ -31,7 +31,7 @@ export class FileService {
     bucketName: string,
     fileName: string,
     limitFileSize?: number,
-  ): Promise<AppResult<UploadUrlDto, string>> {
+  ): Promise<UploadUrlDto> {
     const expires = Date.now() + 15 * 60 * 1000; // 15 minutes
 
     const writeOptions: GetSignedUrlConfig = {
@@ -67,17 +67,15 @@ export class FileService {
         .getSignedUrl(readOptions);
 
       return {
-        data: {
-          uploadUrl,
-          expires,
-          objectUrl,
-          signedUrl,
-        },
+        uploadUrl,
+        expires,
+        objectUrl,
+        signedUrl,
       };
     } catch (err) {
       this.logger.error(`file: generateUploadUrl: ${err.message}`);
 
-      return { err: 'common.serverError' };
+      throw new AppError('common.serverError');
     }
   }
 }

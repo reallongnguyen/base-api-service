@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 
-export const errorMessages = {
+export const commonErrorMap = {
   common: {
     serverError: {
       status: HttpStatus.INTERNAL_SERVER_ERROR,
@@ -21,18 +21,5 @@ export const errorMessages = {
       message:
         'this message is representative of all validation error messages that depend on the class-validator library',
     },
-  },
-  user: {
-    create: {},
-    list: {},
-    getProfile: {
-      notFound: {
-        status: HttpStatus.NOT_FOUND,
-        message: 'user profile not found',
-      },
-    },
-  },
-  file: {
-    getUploadAvatarUrl: {},
   },
 };

@@ -1,11 +1,16 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseFilters, UseInterceptors } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import HttpResponse from './common/models/HttpResponse';
+import {
+  FormatHttpResponseInterceptor,
+  HttpExceptionFilter,
+  OkResponse,
+} from 'src/common/present/http';
 import { version } from '../package.json';
-import { OkResponse } from './common/decorators/success-response.decorator';
 
 @Controller()
+@UseInterceptors(new FormatHttpResponseInterceptor())
+@UseFilters(new HttpExceptionFilter({}))
 @ApiTags('app')
 export class AppController {
   constructor(private configService: ConfigService) {}
@@ -16,10 +21,10 @@ export class AppController {
     summary: 'App information',
   })
   @OkResponse(Object)
-  get(): HttpResponse<Record<string, string>> {
-    return HttpResponse.ok({
+  get(): Record<string, string> {
+    return {
       ...this.configService.get<Record<string, string>>('app'),
       version,
-    });
+    };
   }
 }

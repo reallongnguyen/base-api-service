@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
-import { AppResult, Collection } from 'src/common/models';
+import { Collection } from 'src/common/models';
+import { AppError } from 'src/common/models/AppError';
 import { Logger } from 'nestjs-pino';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { User } from './models/user.model';
@@ -50,9 +51,7 @@ export class UserService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async users(
-    params: ListUserInput,
-  ): Promise<AppResult<Collection<UserOutput>, string>> {
+  async users(params: ListUserInput): Promise<Collection<UserOutput>> {
     const { name, offset, limit, orderBy, orderDirection } = params;
 
     try {
@@ -66,25 +65,21 @@ export class UserService {
       const total = await this.prisma.user.count();
 
       return {
-        data: {
-          edges: users.map(UserOutput.fromUser),
-          pagination: {
-            total,
-            limit,
-            offset,
-          },
+        edges: users.map(UserOutput.fromUser),
+        pagination: {
+          total,
+          limit,
+          offset,
         },
       };
     } catch (err) {
       this.logger.error(`user: list: ${err.message}`);
 
-      return { err: 'common.serverError' };
+      throw new AppError('common.serverError');
     }
   }
 
-  async createOrUpdateUser(
-    input: UserUpsertInput,
-  ): Promise<AppResult<UserOutput, string>> {
+  async createOrUpdateUser(input: UserUpsertInput): Promise<UserOutput> {
     try {
       const user = await this.prisma.user.upsert({
         where: { authId: input.authId },
@@ -97,15 +92,15 @@ export class UserService {
 
       this.eventEmitter.emit('profile.updated', user);
 
-      return { data: UserOutput.fromUser(user) };
+      return UserOutput.fromUser(user);
     } catch (err) {
       this.logger.error(`user: createOrUpdateUser: ${err.message}`);
 
-      return { err: 'common.serverError' };
+      throw new AppError('common.serverError');
     }
   }
 
-  async getProfile(userId: string): Promise<AppResult<ProfileOutput, string>> {
+  async getProfile(userId: string): Promise<ProfileOutput> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -116,14 +111,14 @@ export class UserService {
           `user: getProfile: user ${JSON.stringify(userId)} not found`,
         );
 
-        return { err: 'user.getProfile.notFound' };
+        throw new AppError('user.getProfile.notFound');
       }
 
-      return { data: ProfileOutput.fromUser(user) };
+      return ProfileOutput.fromUser(user);
     } catch (err) {
       this.logger.error(`user: getProfile: ${err.message}`);
 
-      return { err: 'common.serverError' };
+      throw new AppError('common.serverError');
     }
   }
 }

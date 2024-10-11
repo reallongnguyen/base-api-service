@@ -7,12 +7,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import HttpResponse from 'src/common/models/HttpResponse';
 import { PrismaService } from 'src/prisma.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Logger } from 'nestjs-pino';
 import { Cache } from 'cache-manager';
 import { AuthContextInfo } from './models/auth-context-info.model';
+import { AppError } from '../models/AppError';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -31,7 +31,7 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       this.logger.warn('auth: authGuard: missing access token');
 
-      throw HttpResponse.error('common.invalidToken');
+      throw new AppError('common.invalidToken');
     }
 
     const signature = token.split('.')[2];
@@ -39,7 +39,7 @@ export class AuthGuard implements CanActivate {
     if (!signature) {
       this.logger.warn('auth: authGuard: incorrect token format');
 
-      throw HttpResponse.error('common.invalidToken');
+      throw new AppError('common.invalidToken');
     }
 
     const authCtxKey = `authCtx_${signature}`;
@@ -85,7 +85,7 @@ export class AuthGuard implements CanActivate {
     } catch (err) {
       this.logger.warn(`auth: authGuard: ${err}`);
 
-      throw HttpResponse.error('common.invalidToken');
+      throw new AppError('common.invalidToken');
     }
     return true;
   }

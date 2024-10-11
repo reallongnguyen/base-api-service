@@ -1,6 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import HttpResponse from 'src/common/models/HttpResponse';
+import { AppError } from 'src/common/models/AppError';
 import { Role } from './models/role.enum';
 import { ROLES_KEY } from './decorators/require-any-roles.decorator';
 import { AuthContextInfo } from './models/auth-context-info.model';
@@ -23,15 +23,15 @@ export class RolesGuard implements CanActivate {
     const authCtx = AuthContextInfo.fromJwtPayload(authContext);
 
     if (!authCtx || !Array.isArray(authCtx.roles)) {
-      throw HttpResponse.error('common.invalidToken');
+      throw new AppError('common.invalidToken');
     }
 
     if (requiredRoles.find((role) => authCtx.roles.includes(role))) {
       return true;
     }
 
-    throw HttpResponse.error('common.noPrivilege', {
-      msgParams: { roles: requiredRoles.join(', ') },
+    throw new AppError('common.noPrivilege', {
+      roles: requiredRoles.join(', '),
     });
   }
 }

@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, ValidationError } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import * as lodash from 'lodash';
-import { errorMessages } from './messages/errorMessage';
+import { get } from 'lodash';
+import { commonErrorMap } from '../../models/common-error.map';
 
-export interface AppError extends Error {
+export interface HttpError extends Error {
   name: string;
   message: string;
 }
@@ -34,14 +34,14 @@ export default class HttpResponse<T> {
   @ApiProperty({
     description: 'API response error',
   })
-  error?: AppError;
+  error?: HttpError;
 
   @ApiProperty({
     description: 'API response data',
   })
   data?: T;
 
-  constructor(message: string, error?: AppError, data?: T) {
+  constructor(message: string, error?: HttpError, data?: T) {
     this.message = message;
     this.error = error;
     this.data = data;
@@ -53,11 +53,12 @@ export default class HttpResponse<T> {
 
   static error(
     name: string,
+    errorMap: Record<string, Record<string, any>>,
     extra?: {
       msgParams?: Record<string, string | number | boolean>;
     },
   ): HttpException {
-    const errorConfig = lodash.get(errorMessages, name);
+    const errorConfig = get(errorMap, name);
 
     if (!errorConfig) {
       return new HttpException(
@@ -74,7 +75,7 @@ export default class HttpResponse<T> {
     }
 
     const { status, message: errorMessage } = errorConfig;
-    const error: AppError = { name, message: errorMessage };
+    const error: HttpError = { name, message: errorMessage };
 
     // replace {{param}} in error message with value
     if (extra?.msgParams) {
@@ -101,7 +102,7 @@ export default class HttpResponse<T> {
   }
 
   static transformValidatorError(errors: ValidationError[]): HttpException {
-    const { status } = errorMessages.validation.validationFailed;
+    const { status } = commonErrorMap.validation.validationFailed;
     const firstError = errors[0];
     const firstConstraint = Object.keys(firstError.constraints as any)[0];
 
@@ -122,7 +123,7 @@ export default class HttpResponse<T> {
   static customError(
     message: MessageType,
     httpCode: number,
-    error: AppError,
+    error: HttpError,
   ): HttpException {
     return new HttpException(
       new HttpResponse(message, error, undefined),

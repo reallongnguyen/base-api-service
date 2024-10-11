@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AppResult, Collection } from 'src/common/models';
+import { AppError, Collection } from 'src/common/models';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
 import { Logger } from 'nestjs-pino';
@@ -15,7 +15,7 @@ export class NotificationService {
 
   async getManyNotifications(
     findManyArgs: Prisma.NotificationFindManyArgs,
-  ): Promise<AppResult<Collection<NotificationOutput>, string>> {
+  ): Promise<Collection<NotificationOutput>> {
     try {
       const findManyArgsClone = cloneDeep(findManyArgs);
       if (!findManyArgsClone.take) {
@@ -34,13 +34,11 @@ export class NotificationService {
       const notiOutputs = notifications.map(NotificationOutput.from);
 
       return {
-        data: {
-          edges: notiOutputs,
-          pagination: {
-            offset: findManyArgsClone.skip || 0,
-            limit: findManyArgsClone.take,
-            total,
-          },
+        edges: notiOutputs,
+        pagination: {
+          offset: findManyArgsClone.skip || 0,
+          limit: findManyArgsClone.take,
+          total,
         },
       };
     } catch (err) {
@@ -48,14 +46,14 @@ export class NotificationService {
         `notification: notification.service: getManyNotifications: ${err.message}`,
       );
 
-      return { err: 'common.serverError' };
+      throw new AppError('common.serverError');
     }
   }
 
   async markNotificationAsRead(
     userId: string,
     notificationId?: string,
-  ): Promise<AppResult<null, string>> {
+  ): Promise<void> {
     try {
       await this.prismaService.notification.updateMany({
         where: {
@@ -68,14 +66,12 @@ export class NotificationService {
           updatedAt: new Date(),
         },
       });
-
-      return { data: null };
     } catch (err) {
       this.logger.error(
         `notification: notification.service: markNotificationAsRead: ${err.message}`,
       );
 
-      return { err: 'common.serverError' };
+      throw new AppError('common.serverError');
     }
   }
 }

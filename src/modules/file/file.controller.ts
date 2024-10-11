@@ -1,6 +1,11 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
-import { ErrorResponse, OkResponse } from 'src/common/decorators';
-import { HttpResponse } from 'src/common/models';
+import {
+  Controller,
+  Get,
+  Query,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   AuthContext,
@@ -10,16 +15,25 @@ import {
   RolesGuard,
   Role,
 } from 'src/common/auth';
+import {
+  FormatHttpResponseInterceptor,
+  HttpExceptionFilter,
+  ErrorResponse,
+  OkResponse,
+} from 'src/common/present/http';
 import { FileService } from './file.service';
 import { GetImageUploadUrlDto, UploadUrlDto } from './dto/upload-url.dto';
+import { fileErrorMap } from './models/file-error.map';
 
 @Controller({
   path: 'files',
   version: '1',
 })
 @UseGuards(AuthGuard, RolesGuard)
+@UseInterceptors(new FormatHttpResponseInterceptor())
+@UseFilters(new HttpExceptionFilter(fileErrorMap))
 @ApiTags('files')
-@ErrorResponse('common')
+@ErrorResponse('common', fileErrorMap)
 export class FileController {
   constructor(private assetService: FileService) {}
 
@@ -30,21 +44,17 @@ export class FileController {
     summary: 'Get the upload avatar url',
   })
   @OkResponse(UploadUrlDto)
-  @ErrorResponse('file.getUploadAvatarUrl')
+  @ErrorResponse('file.getUploadAvatarUrl', fileErrorMap)
   async getUploadAvatarUrl(
     @Query() query: GetImageUploadUrlDto,
     @AuthContext() authCtx: AuthContextInfo,
-  ): Promise<HttpResponse<UploadUrlDto>> {
-    const { data, err } = await this.assetService.generateUploadAvatarUrl(
+  ): Promise<UploadUrlDto> {
+    const data = await this.assetService.generateUploadAvatarUrl(
       authCtx.userId,
       query.mimeType,
       query.size,
     );
 
-    if (err) {
-      throw HttpResponse.error(err);
-    }
-
-    return HttpResponse.ok(data);
+    return data;
   }
 }

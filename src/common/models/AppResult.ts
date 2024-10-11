@@ -1,3 +1,5 @@
+import { AppError } from '.';
+
 export interface SuccessResult<T> {
   err?: never;
   data: T;
@@ -8,4 +10,4 @@ export interface FailResult<T> {
   data?: never;
 }
 
-export type AppResult<T, K> = SuccessResult<T> | FailResult<K>;
+export type AppResult<T, K = AppError> = SuccessResult<T> | FailResult<K>;

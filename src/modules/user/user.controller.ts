@@ -1,12 +1,14 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { HttpResponse, Collection } from 'src/common/models';
 import {
-  ErrorResponse,
-  CreatedResponse,
-  OkResponse,
-  PaginatedResponse,
-} from 'src/common/decorators';
+  Body,
+  Controller,
+  Get,
+  Post,
+  UseFilters,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Collection } from 'src/common/models';
 import {
   AuthContextInfo,
   RequireAnyRoles,
@@ -15,17 +17,28 @@ import {
   AuthGuard,
   Role,
 } from 'src/common/auth';
+import {
+  ErrorResponse,
+  CreatedResponse,
+  OkResponse,
+  PaginatedResponse,
+  HttpExceptionFilter,
+  FormatHttpResponseInterceptor,
+} from 'src/common/present/http';
 import { UserUpsertInput, UserService } from './user.service';
 import { UserCreateDto, UserDto } from './dto/user.dto';
 import { ProfileDto } from './dto/profile.dto';
+import { userErrorMap } from './models/user-error.map';
 
 @Controller({
   path: 'users',
   version: '1',
 })
 @UseGuards(AuthGuard, RolesGuard)
+@UseInterceptors(new FormatHttpResponseInterceptor())
+@UseFilters(new HttpExceptionFilter(userErrorMap))
 @ApiTags('users')
-@ErrorResponse('common')
+@ErrorResponse('common', userErrorMap)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -35,24 +48,19 @@ export class UserController {
     summary: 'Create or Update an user',
   })
   @CreatedResponse(UserDto)
-  @ErrorResponse('user.create', { hasValidationErr: true })
+  @ErrorResponse('user.create', userErrorMap, { hasValidationErr: true })
   async create(
     @Body() userData: UserCreateDto,
     @AuthContext() authCtx: AuthContextInfo,
-  ): Promise<HttpResponse<UserDto>> {
+  ): Promise<UserDto> {
     const userUpsertInput: UserUpsertInput = {
       ...userData,
       authId: authCtx.authId,
     };
 
-    const { data: user, err } =
-      await this.userService.createOrUpdateUser(userUpsertInput);
+    const user = await this.userService.createOrUpdateUser(userUpsertInput);
 
-    if (err) {
-      throw HttpResponse.error(err);
-    }
-
-    return HttpResponse.ok(user);
+    return user;
   }
 
   @Get()
@@ -62,15 +70,11 @@ export class UserController {
     summary: 'List up users',
   })
   @PaginatedResponse(UserDto)
-  @ErrorResponse('user.list', { hasValidationErr: true })
-  async list(): Promise<HttpResponse<Collection<UserDto>>> {
-    const { data, err } = await this.userService.users({});
+  @ErrorResponse('user.list', userErrorMap, { hasValidationErr: true })
+  async list(): Promise<Collection<UserDto>> {
+    const userCollection = await this.userService.users({});
 
-    if (err) {
-      throw HttpResponse.error(err);
-    }
-
-    return HttpResponse.ok(data);
+    return userCollection;
   }
 
   @Get('/profile')
@@ -80,16 +84,12 @@ export class UserController {
     summary: 'Get my profile',
   })
   @OkResponse(ProfileDto)
-  @ErrorResponse('user.profile')
+  @ErrorResponse('user.profile', userErrorMap)
   async getProfile(
     @AuthContext() authCtx: AuthContextInfo,
-  ): Promise<HttpResponse<ProfileDto>> {
-    const { data, err } = await this.userService.getProfile(authCtx.userId);
+  ): Promise<ProfileDto> {
+    const profile = await this.userService.getProfile(authCtx.userId);
 
-    if (err) {
-      throw HttpResponse.error(err);
-    }
-
-    return HttpResponse.ok(data);
+    return profile;
   }
 }

@@ -1,26 +1,26 @@
 import { applyDecorators } from '@nestjs/common';
 import { ApiExtraModels, ApiResponse } from '@nestjs/swagger';
 import * as lodash from 'lodash';
-import { errorMessages } from 'src/common/models/messages/errorMessage';
-import FailResponseDto from 'src/common/decorators/fail-response.dto';
-import HttpResponse, { AppError } from 'src/common/models/HttpResponse';
+import FailResponseDto from 'src/common/present/http/decorators/fail-response.dto';
+import HttpResponse, { HttpError } from 'src/common/present/http/HttpResponse';
 
 export const ErrorResponse = (
   errorGroup: string,
+  errorMap: Record<string, Record<string, any>>,
   options?: { hasValidationErr: boolean },
 ) => {
-  const errorConfig = lodash.get(errorMessages, errorGroup, {});
+  const errorConfig = lodash.get(errorMap, errorGroup, {});
 
   if (options?.hasValidationErr) {
-    const { validationFailed } = errorMessages.validation;
+    const { validationFailed } = errorMap.validation;
     (errorConfig as any).validationFailed = validationFailed;
   }
 
-  const errorGroups: Record<number, AppError[]> = {};
+  const errorGroups: Record<number, HttpError[]> = {};
 
   Object.entries(errorConfig).forEach(([type, errorInfo]: [string, any]) => {
     const { status, description } = errorInfo;
-    const error: AppError = {
+    const error: HttpError = {
       message: description,
       name: `${errorGroup}.${type}`,
     };
@@ -52,7 +52,7 @@ export const ErrorResponse = (
             required: ['message', 'name'],
           },
         },
-        example: HttpResponse.error(error.name).getResponse(),
+        example: HttpResponse.error(error.name, errorMap).getResponse(),
         required: ['message', 'error'],
       }));
 
