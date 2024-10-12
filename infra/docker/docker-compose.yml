@@ -1,0 +1,114 @@
+services:
+  tyk-gateway:
+    image: docker.tyk.io/tyk-gateway/tyk-gateway:v5.5.0
+    ports:
+      - 8080:8080
+    networks:
+      - vpc-bridge
+    depends_on:
+      - tyk-redis
+      - auth-gotrue
+    volumes:
+      - ./tyk-gateway/tyk.standalone.conf:/opt/tyk-gateway/tyk.conf
+      - ./tyk-gateway/apps:/opt/tyk-gateway/apps
+      - ./tyk-gateway/middleware:/opt/tyk-gateway/middleware
+      - ./tyk-gateway/certs:/opt/tyk-gateway/certs
+      - ./tyk-gateway/policies:/opt/tyk-gateway/policies
+    environment:
+      - TYK_GW_SECRET=${TYK_GW_SECRET}
+
+  tyk-redis:
+    image: redis:6.2.7-alpine
+    volumes:
+      - tyk-redis-data:/data
+    networks:
+      - vpc-bridge
+
+  auth-postgres:
+    image: postgres
+    restart: unless-stopped
+    volumes:
+      - auth-postgres-vol-data:/var/lib/postgresql/data
+      - ./gotrue/db/auth.sql:/docker-entrypoint-initdb.d/auth.sql
+    environment:
+      POSTGRES_USER: ${GOTRUE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${GOTRUE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${GOTRUE_POSTGRES_DB}
+    networks:
+      - vpc-bridge
+
+  auth-gotrue:
+    image: supabase/gotrue:v2.152.1
+    networks:
+      - vpc-bridge
+    depends_on:
+      - auth-postgres
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:9999/health',
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${GOTRUE_POSTGRES_PASSWORD}@auth-postgres:5432/${GOTRUE_POSTGRES_DB}
+
+      GOTRUE_SITE_URL: ${SITE_URL}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS}
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP}
+
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP}
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS}
+      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
+      # GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED: true
+      # GOTRUE_SMTP_MAX_FREQUENCY: 1s
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT}
+      GOTRUE_SMTP_USER: ${SMTP_USER}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION}
+      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY}
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE}
+
+      GOTRUE_EXTERNAL_PHONE_ENABLED: ${ENABLE_PHONE_SIGNUP}
+      GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM}
+
+      # Uncomment to enable custom access token hook. You'll need to create a public.custom_access_token_hook function and grant necessary permissions.
+      # See: https://supabase.com/docs/guides/auth/auth-hooks#hook-custom-access-token for details
+      # GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_ENABLED="true"
+      # GOTRUE_HOOK_CUSTOM_ACCESS_TOKEN_URI="pg-functions://postgres/public/custom_access_token_hook"
+
+      # GOTRUE_HOOK_MFA_VERIFICATION_ATTEMPT_ENABLED="true"
+      # GOTRUE_HOOK_MFA_VERIFICATION_ATTEMPT_URI="pg-functions://postgres/public/mfa_verification_attempt"
+
+      # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_ENABLED="true"
+      # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_URI="pg-functions://postgres/public/password_verification_attempt"
+
+volumes:
+  tyk-redis-data:
+  auth-postgres-vol-data:
+
+networks:
+  vpc-bridge:
+    driver: bridge

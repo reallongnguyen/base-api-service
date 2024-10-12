@@ -1,0 +1,23 @@
+{
+  "name": "Auth Gotrue API",
+  "api_id": "auth-gotrue",
+  "org_id": "default",
+  "definition": {
+    "location": "header",
+    "key": "version"
+  },
+  "use_keyless": true,
+  "version_data": {
+    "not_versioned": true,
+    "versions": {
+      "Default": {
+        "name": "Default"
+      }
+    }
+  },
+  "proxy": {
+    "listen_path": "/auth/",
+    "target_url": "http://auth-gotrue:9999",
+    "strip_listen_path": true
+  }
+}
