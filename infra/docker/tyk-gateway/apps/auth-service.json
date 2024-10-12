@@ -1,6 +1,6 @@
 {
-  "name": "Auth Gotrue API",
-  "api_id": "auth-gotrue",
+  "name": "Auth Service",
+  "api_id": "auth-service",
   "org_id": "default",
   "definition": {
     "location": "header",
@@ -17,7 +17,7 @@
   },
   "proxy": {
     "listen_path": "/auth/",
-    "target_url": "http://auth-gotrue:9999",
+    "target_url": "http://auth-service:8000",
     "strip_listen_path": true
   }
 }

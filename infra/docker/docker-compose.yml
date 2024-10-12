@@ -7,7 +7,8 @@ services:
       - vpc-bridge
     depends_on:
       - tyk-redis
-      - auth-gotrue
+      - auth-service
+      - api-service
     volumes:
       - ./tyk-gateway/tyk.standalone.conf:/opt/tyk-gateway/tyk.conf
       - ./tyk-gateway/apps:/opt/tyk-gateway/apps
@@ -37,7 +38,7 @@ services:
     networks:
       - vpc-bridge
 
-  auth-gotrue:
+  auth-service:
     image: supabase/gotrue:v2.152.1
     networks:
       - vpc-bridge
@@ -51,7 +52,7 @@ services:
           '--no-verbose',
           '--tries=1',
           '--spider',
-          'http://localhost:9999/health',
+          'http://localhost:8000/health',
         ]
       timeout: 5s
       interval: 5s
@@ -59,7 +60,7 @@ services:
     restart: unless-stopped
     environment:
       GOTRUE_API_HOST: 0.0.0.0
-      GOTRUE_API_PORT: 9999
+      GOTRUE_API_PORT: 8000
       API_EXTERNAL_URL: ${API_EXTERNAL_URL}
 
       GOTRUE_DB_DRIVER: postgres
@@ -105,9 +106,123 @@ services:
       # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_ENABLED="true"
       # GOTRUE_HOOK_PASSWORD_VERIFICATION_ATTEMPT_URI="pg-functions://postgres/public/password_verification_attempt"
 
+  api-postgres:
+    image: postgres
+    restart: unless-stopped
+    volumes:
+      - api-pg-data:/var/lib/postgresql/data
+    networks:
+      - vpc-bridge
+    # ports:
+    #   - 5432:5432
+    environment:
+      POSTGRES_USER: ${API_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${API_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${API_POSTGRES_DB}
+
+  api-redis:
+    image: redis/redis-stack
+    restart: unless-stopped
+    networks:
+      - vpc-bridge
+    # environment:
+    #   REDIS_ARGS: --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - api-redis-data:/data
+
+  api-mqtt01:
+    image: emqx:latest
+    restart: unless-stopped
+    volumes:
+      - api-vol-emqx01-data:/opt/emqx/data
+      - api-vol-emqx01-log:/opt/emqx/log
+    environment:
+      - 'EMQX_NODE__NAME=emqx@node01.emqx.io'
+      - 'EMQX_CLUSTER__DISCOVERY_STRATEGY=static'
+      - 'EMQX_CLUSTER__STATIC__SEEDS=[emqx@node01.emqx.io, emqx@node02.emqx.io]'
+    networks:
+      vpc-bridge:
+        aliases:
+          - node01.emqx.io
+
+  api-mqtt02:
+    image: emqx:latest
+    restart: unless-stopped
+    volumes:
+      - api-vol-emqx02-data:/opt/emqx/data
+      - api-vol-emqx02-log:/opt/emqx/log
+    environment:
+      - 'EMQX_NODE__NAME=emqx@node02.emqx.io'
+      - 'EMQX_CLUSTER__DISCOVERY_STRATEGY=static'
+      - 'EMQX_CLUSTER__STATIC__SEEDS=[emqx@node01.emqx.io, emqx@node02.emqx.io]'
+    networks:
+      vpc-bridge:
+        aliases:
+          - node02.emqx.io
+
+  api-service:
+    build: ./base-api
+    networks:
+      - vpc-bridge
+    depends_on:
+      - api-postgres
+      - api-redis
+      - api-mqtt01
+      - api-mqtt02
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'wget',
+          '--no-verbose',
+          '--tries=1',
+          '--spider',
+          'http://localhost:8000/health',
+        ]
+      timeout: 5s
+      interval: 5s
+      retries: 3
+    environment:
+      NODE_ENV: production
+      # Common module
+      APP_NAME: 'API Service'
+      APP_URL: https://api.isling.me
+      APP_PORT: 8000
+      LOG_LEVEL: info
+      ## DB
+      DATABASE_URL: postgresql://${API_POSTGRES_USER}:${API_POSTGRES_PASSWORD}@api-postgres:5432/${API_POSTGRES_DB}?schema=public
+      REDIS_URL: redis://api-redis:6379/0
+      ## Security
+      JWT_SECRET: ${JWT_SECRET}
+      ## Rate limit
+      THROTTLE_TTL: 60000
+      THROTTLE_LIMIT: 60
+      # File module
+      ## Storage
+      USER_ASSET_BUCKET: isling-dev01-user-asset
+      ## Credentials
+      GOOGLE_APPLICATION_CREDENTIALS: 'credentials/stone-arch-407908-3c3c6a5bf274.json'
+      # Notification module
+      NOTIFICATION_MQTT_URL: mqtt://api-mqtt01:2883
+      ## unit: second
+      NOTIFICATION_MERGE_THRESHOLD: 28800
+      ## Distributed locks
+      MUTEX_REDIS1_HOST: api-redis
+      MUTEX_REDIS1_PORT: 6379
+      MUTEX_REDIS2_HOST: api-redis
+      MUTEX_REDIS2_PORT: 6379
+      MUTEX_REDIS3_HOST: api-redis
+      MUTEX_REDIS3_PORT: 6379
+
 volumes:
   tyk-redis-data:
   auth-postgres-vol-data:
+  api-pg-data:
+  api-redis-data:
+  api-vol-emqx01-data:
+  api-vol-emqx01-log:
+  api-vol-emqx02-data:
+  api-vol-emqx02-log:
 
 networks:
   vpc-bridge:
