@@ -5,7 +5,9 @@
 API Service
 
 ```bash
-git clone https://github.com/reallongnguyen/base-api-service.git && mv base-api-service api-service
+rm -rf api-service \
+&& git clone https://github.com/reallongnguyen/base-api-service.git \
+&& mv base-api-service api-service
 ```
 
 ## Preparation environment variable `.env`

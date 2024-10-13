@@ -1,6 +1,7 @@
 -- NOTE: change to your own passwords for production environments
 \set pgpass `echo "$POSTGRES_PASSWORD"`
 
+CREATE USER postgres LOGIN CREATEROLE CREATEDB REPLICATION BYPASSRLS;
 CREATE USER supabase_admin LOGIN CREATEROLE CREATEDB REPLICATION BYPASSRLS;
 
 -- Supabase super admin
