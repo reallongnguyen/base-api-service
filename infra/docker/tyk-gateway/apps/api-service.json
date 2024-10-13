@@ -1,12 +1,11 @@
 {
-  "name": "API Service",
+  "name": "api-service",
   "api_id": "api-service",
   "org_id": "default",
   "definition": {
     "location": "header",
     "key": "version"
   },
-  "use_keyless": true,
   "version_data": {
     "not_versioned": true,
     "versions": {
@@ -15,9 +14,22 @@
       }
     }
   },
+  "use_keyless": false,
+  "auth": {
+    "auth_header_name": "Authorization"
+  },
+  "active": true,
+  "enable_jwt": true,
+  "jwt_signing_method": "hmac",
+  "jwt_identity_base_field": "sub",
+  "jwt_policy_field_name": "pol",
+  "jwt_default_policies": [
+    "default-policy"
+  ],
+  "jwt_source": "env://API_SERVICE_JWT_SECRET_BASE64",
   "proxy": {
     "listen_path": "/api/",
-    "target_url": "http://api-service:8000",
+    "target_url": "env://API_SERVICE_URL",
     "strip_listen_path": true
   }
 }

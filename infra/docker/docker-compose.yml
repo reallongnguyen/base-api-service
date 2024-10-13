@@ -1,6 +1,6 @@
 services:
   tyk-gateway:
-    image: docker.tyk.io/tyk-gateway/tyk-gateway:v5.5.0
+    image: docker.tyk.io/tyk-gateway/tyk-gateway:v5.6.0
     ports:
       - 8080:8080
     networks:
@@ -16,7 +16,10 @@ services:
       - ./tyk-gateway/certs:/opt/tyk-gateway/certs
       - ./tyk-gateway/policies:/opt/tyk-gateway/policies
     environment:
-      - TYK_GW_SECRET=${TYK_GW_SECRET}
+      TYK_GW_SECRET: ${TYK_GW_SECRET}
+      API_SERVICE_JWT_SECRET_BASE64: ${API_SERVICE_JWT_SECRET_BASE64}
+      API_SERVICE_URL: http://api-service:8000
+      AUTH_SERVICE_URL: http://auth-service:8000
 
   tyk-redis:
     image: redis:6.2.7-alpine
@@ -30,11 +33,11 @@ services:
     restart: unless-stopped
     volumes:
       - auth-postgres-vol-data:/var/lib/postgresql/data
-      - ./gotrue/db/auth.sql:/docker-entrypoint-initdb.d/auth.sql
+      - ./auth-service/db/auth.sql:/docker-entrypoint-initdb.d/auth.sql
     environment:
-      POSTGRES_USER: ${GOTRUE_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${GOTRUE_POSTGRES_PASSWORD}
-      POSTGRES_DB: ${GOTRUE_POSTGRES_DB}
+      POSTGRES_USER: ${AUTH_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${AUTH_SERVICE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${AUTH_SERVICE_POSTGRES_DB}
     networks:
       - vpc-bridge
 
@@ -61,39 +64,39 @@ services:
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 8000
-      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+      API_EXTERNAL_URL: ${AUTH_SERVICE_API_EXTERNAL_URL}
 
       GOTRUE_DB_DRIVER: postgres
-      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${GOTRUE_POSTGRES_PASSWORD}@auth-postgres:5432/${GOTRUE_POSTGRES_DB}
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${AUTH_SERVICE_POSTGRES_PASSWORD}@auth-postgres:5432/${AUTH_SERVICE_POSTGRES_DB}
 
-      GOTRUE_SITE_URL: ${SITE_URL}
-      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS}
-      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP}
+      GOTRUE_SITE_URL: ${AUTH_SERVICE_SITE_URL}
+      GOTRUE_URI_ALLOW_LIST: ${AUTH_SERVICE_ADDITIONAL_REDIRECT_URLS}
+      GOTRUE_DISABLE_SIGNUP: ${AUTH_SERVICE_DISABLE_SIGNUP}
 
       GOTRUE_JWT_ADMIN_ROLES: service_role
       GOTRUE_JWT_AUD: authenticated
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
-      GOTRUE_JWT_EXP: ${JWT_EXPIRY}
-      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: ${AUTH_SERVICE_JWT_EXPIRY}
+      GOTRUE_JWT_SECRET: ${AUTH_SERVICE_JWT_SECRET}
 
-      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${ENABLE_EMAIL_SIGNUP}
-      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${ENABLE_ANONYMOUS_USERS}
-      GOTRUE_MAILER_AUTOCONFIRM: ${ENABLE_EMAIL_AUTOCONFIRM}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: ${AUTH_SERVICE_ENABLE_EMAIL_SIGNUP}
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: ${AUTH_SERVICE_ENABLE_ANONYMOUS_USERS}
+      GOTRUE_MAILER_AUTOCONFIRM: ${AUTH_SERVICE_ENABLE_EMAIL_AUTOCONFIRM}
       # GOTRUE_MAILER_SECURE_EMAIL_CHANGE_ENABLED: true
       # GOTRUE_SMTP_MAX_FREQUENCY: 1s
-      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
-      GOTRUE_SMTP_HOST: ${SMTP_HOST}
-      GOTRUE_SMTP_PORT: ${SMTP_PORT}
-      GOTRUE_SMTP_USER: ${SMTP_USER}
-      GOTRUE_SMTP_PASS: ${SMTP_PASS}
-      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
-      GOTRUE_MAILER_URLPATHS_INVITE: ${MAILER_URLPATHS_INVITE}
-      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${MAILER_URLPATHS_CONFIRMATION}
-      GOTRUE_MAILER_URLPATHS_RECOVERY: ${MAILER_URLPATHS_RECOVERY}
-      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${MAILER_URLPATHS_EMAIL_CHANGE}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${AUTH_SERVICE_SMTP_ADMIN_EMAIL}
+      GOTRUE_SMTP_HOST: ${AUTH_SERVICE_SMTP_HOST}
+      GOTRUE_SMTP_PORT: ${AUTH_SERVICE_SMTP_PORT}
+      GOTRUE_SMTP_USER: ${AUTH_SERVICE_SMTP_USER}
+      GOTRUE_SMTP_PASS: ${AUTH_SERVICE_SMTP_PASS}
+      GOTRUE_SMTP_SENDER_NAME: ${AUTH_SERVICE_SMTP_SENDER_NAME}
+      GOTRUE_MAILER_URLPATHS_INVITE: ${AUTH_SERVICE_MAILER_URLPATHS_INVITE}
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: ${AUTH_SERVICE_MAILER_URLPATHS_CONFIRMATION}
+      GOTRUE_MAILER_URLPATHS_RECOVERY: ${AUTH_SERVICE_MAILER_URLPATHS_RECOVERY}
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: ${AUTH_SERVICE_MAILER_URLPATHS_EMAIL_CHANGE}
 
-      GOTRUE_EXTERNAL_PHONE_ENABLED: ${ENABLE_PHONE_SIGNUP}
-      GOTRUE_SMS_AUTOCONFIRM: ${ENABLE_PHONE_AUTOCONFIRM}
+      GOTRUE_EXTERNAL_PHONE_ENABLED: ${AUTH_SERVICE_ENABLE_PHONE_SIGNUP}
+      GOTRUE_SMS_AUTOCONFIRM: ${AUTH_SERVICE_ENABLE_PHONE_AUTOCONFIRM}
 
       # Uncomment to enable custom access token hook. You'll need to create a public.custom_access_token_hook function and grant necessary permissions.
       # See: https://supabase.com/docs/guides/auth/auth-hooks#hook-custom-access-token for details
@@ -116,9 +119,9 @@ services:
     # ports:
     #   - 5432:5432
     environment:
-      POSTGRES_USER: ${API_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${API_POSTGRES_PASSWORD}
-      POSTGRES_DB: ${API_POSTGRES_DB}
+      POSTGRES_USER: ${API_SERVICE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${API_SERVICE_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${API_SERVICE_POSTGRES_DB}
 
   api-redis:
     image: redis/redis-stack
@@ -161,7 +164,7 @@ services:
           - node02.emqx.io
 
   api-service:
-    build: ./base-api
+    build: ./api-service
     networks:
       - vpc-bridge
     depends_on:
@@ -185,15 +188,15 @@ services:
     environment:
       NODE_ENV: production
       # Common module
-      APP_NAME: 'API Service'
-      APP_URL: https://api.isling.me
+      APP_NAME: ${API_SERVICE_APP_NAME}
+      APP_URL: ${API_SERVICE_APP_URL}
       APP_PORT: 8000
       LOG_LEVEL: info
       ## DB
-      DATABASE_URL: postgresql://${API_POSTGRES_USER}:${API_POSTGRES_PASSWORD}@api-postgres:5432/${API_POSTGRES_DB}?schema=public
+      DATABASE_URL: postgresql://${API_SERVICE_POSTGRES_USER}:${API_SERVICE_POSTGRES_PASSWORD}@api-postgres:5432/${API_SERVICE_POSTGRES_DB}?schema=public
       REDIS_URL: redis://api-redis:6379/0
       ## Security
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET: ${API_SERVICE_JWT_SECRET}
       ## Rate limit
       THROTTLE_TTL: 60000
       THROTTLE_LIMIT: 60
@@ -201,7 +204,7 @@ services:
       ## Storage
       USER_ASSET_BUCKET: isling-dev01-user-asset
       ## Credentials
-      GOOGLE_APPLICATION_CREDENTIALS: 'credentials/stone-arch-407908-3c3c6a5bf274.json'
+      GOOGLE_APPLICATION_CREDENTIALS: ${API_SERVICE_GOOGLE_APPLICATION_CREDENTIALS}
       # Notification module
       NOTIFICATION_MQTT_URL: mqtt://api-mqtt01:2883
       ## unit: second
