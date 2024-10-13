@@ -7,10 +7,12 @@ export default () => ({
   },
   logLevel: process.env.LOG_LEVEL || 'info',
   security: {
+    shouldVerifyToken:
+      String(process.env.VERIFY_TOKEN).toLowerCase() === 'true',
     jwtSecret: process.env.JWT_SECRET || '',
     throttle: {
-      ttl: parseInt(process.env.THROTTLE_TTL, 10) || 60000,
-      limit: parseInt(process.env.THROTTLE_LIMIT, 10) || 60,
+      ttl: parseInt(process.env.THROTTLE_TTL, 10) || 1,
+      limit: parseInt(process.env.THROTTLE_LIMIT, 10) || 10000,
     },
   },
   redis: {

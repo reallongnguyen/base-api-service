@@ -1,36 +1,33 @@
 import { Role } from './role.enum';
 
+export enum AgentType {
+  person = 'person',
+  service = 'service',
+}
+
 export class AuthContextInfo {
   authId: string;
-  email: string;
-  phone: string;
+  agentType: AgentType;
   userId?: string;
   roles: Role[];
-  jwtPayload: {
-    aud: string;
-    exp: number;
-    iat: number;
-    sub: string;
-    email: string;
-    phone: string;
-    app_metadata: Record<string, any>;
-    user_metadata: Record<string, any>;
-    role: string;
-    aal: string;
-    amr: Record<string, any>[];
-    session_id: string;
-    is_anonymous: boolean;
-  };
+  expireAt?: number;
 
-  static fromJwtPayload(obj: any): AuthContextInfo {
+  static fromAuthServiceJwtPayload(obj: any): AuthContextInfo {
     const authCtx = new AuthContextInfo();
 
     authCtx.authId = obj.sub;
-    authCtx.email = obj.email;
-    authCtx.phone = obj.phone;
+    authCtx.agentType = AgentType.person;
     authCtx.roles = obj.roles || [];
-    authCtx.jwtPayload = obj;
+    authCtx.expireAt = obj.exp;
 
     return authCtx;
   }
+}
+
+export function shouldCache(authCtx: AuthContextInfo): boolean {
+  if (authCtx.agentType === AgentType.service) {
+    return true;
+  }
+
+  return authCtx.agentType === AgentType.person && authCtx.userId !== undefined;
 }

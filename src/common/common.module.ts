@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ThrottlerModule } from '@nestjs/throttler';
 import { ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RedisClientOptions } from 'redis';
@@ -16,15 +15,6 @@ import { PrismaModule } from './prisma/prisma.module';
   imports: [
     AppConfigModule,
     LoggerModule,
-    ThrottlerModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (service: ConfigService) => [
-        {
-          ttl: service.get<number>('security.throttle.ttl'),
-          limit: service.get<number>('security.throttle.limit'),
-        },
-      ],
-    }),
     CacheModule.registerAsync<RedisClientOptions>({
       inject: [ConfigService],
       isGlobal: true,

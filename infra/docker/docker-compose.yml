@@ -196,10 +196,7 @@ services:
       DATABASE_URL: postgresql://${API_SERVICE_POSTGRES_USER}:${API_SERVICE_POSTGRES_PASSWORD}@api-postgres:5432/${API_SERVICE_POSTGRES_DB}?schema=public
       REDIS_URL: redis://api-redis:6379/0
       ## Security
-      JWT_SECRET: ${API_SERVICE_JWT_SECRET}
-      ## Rate limit
-      THROTTLE_TTL: 60000
-      THROTTLE_LIMIT: 60
+      VERIFY_TOKEN: FALSE
       # File module
       ## Storage
       USER_ASSET_BUCKET: isling-dev01-user-asset
