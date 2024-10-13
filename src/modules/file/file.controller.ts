@@ -21,6 +21,7 @@ import {
   ErrorResponse,
   OkResponse,
 } from 'src/common/present/http';
+import { AppError } from 'src/common/models';
 import { FileService } from './file.service';
 import { GetImageUploadUrlDto, UploadUrlDto } from './dto/upload-url.dto';
 import { fileErrorMap } from './models/file-error.map';
@@ -49,8 +50,12 @@ export class FileController {
     @Query() query: GetImageUploadUrlDto,
     @AuthContext() authCtx: AuthContextInfo,
   ): Promise<UploadUrlDto> {
+    if (!authCtx.person) {
+      throw new AppError('common.requirePerson');
+    }
+
     const data = await this.assetService.generateUploadAvatarUrl(
-      authCtx.userId,
+      authCtx.person.userId,
       query.mimeType,
       query.size,
     );

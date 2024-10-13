@@ -8,7 +8,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Collection } from 'src/common/models';
+import { AppError, Collection } from 'src/common/models';
 import {
   AuthContextInfo,
   RequireAnyRoles,
@@ -53,9 +53,13 @@ export class UserController {
     @Body() userData: UserCreateDto,
     @AuthContext() authCtx: AuthContextInfo,
   ): Promise<UserDto> {
+    if (!authCtx.person) {
+      throw new AppError('common.requirePerson');
+    }
+
     const userUpsertInput: UserUpsertInput = {
       ...userData,
-      authId: authCtx.authId,
+      authId: authCtx.person.authId,
     };
 
     const user = await this.userService.createOrUpdateUser(userUpsertInput);
@@ -88,7 +92,11 @@ export class UserController {
   async getProfile(
     @AuthContext() authCtx: AuthContextInfo,
   ): Promise<ProfileDto> {
-    const profile = await this.userService.getProfile(authCtx.userId);
+    if (!authCtx.person) {
+      throw new AppError('common.requirePerson');
+    }
+
+    const profile = await this.userService.getProfile(authCtx.person.userId);
 
     return profile;
   }

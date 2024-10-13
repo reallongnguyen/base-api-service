@@ -11,7 +11,7 @@ import { PrismaService } from 'src/common/prisma/prisma.service';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Logger } from 'nestjs-pino';
 import { Cache } from 'cache-manager';
-import { AuthContextInfo } from './models/auth-context-info.model';
+import { AuthContextInfo, setUser } from './models/auth-context-info.model';
 import { AppError } from '../models/AppError';
 import { AuthCtxRepo, AuthUsecase } from './auth.usecase';
 
@@ -78,15 +78,14 @@ export class JWTGuard implements CanActivate {
             });
         }
 
-        const authCtx = AuthContextInfo.fromAuthServiceJwtPayload(payload);
+        let authCtx = AuthContextInfo.fromAuthServiceJwtPayload(payload);
 
         const user = await this.prismaService.user.findUnique({
           where: { authId: payload.sub },
         });
 
         if (user) {
-          authCtx.roles = user.roles;
-          authCtx.userId = user.id;
+          authCtx = setUser(authCtx, user);
         }
 
         return authCtx;

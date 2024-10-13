@@ -14,6 +14,10 @@ export const commonErrorMap = {
       status: HttpStatus.FORBIDDEN,
       message: 'require any of roles [{{roles}}]',
     },
+    requirePerson: {
+      status: HttpStatus.FORBIDDEN,
+      message: 'require agent is a person',
+    },
   },
   validation: {
     validationFailed: {

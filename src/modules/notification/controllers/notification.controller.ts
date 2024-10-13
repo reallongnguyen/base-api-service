@@ -7,7 +7,7 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { Collection } from 'src/common/models';
+import { AppError, Collection } from 'src/common/models';
 import {
   AuthContext,
   AuthContextInfo,
@@ -57,8 +57,12 @@ export class NotificationController {
     @AuthContext() authCtx: AuthContextInfo,
     @Query() query: NotificationListQuery,
   ): Promise<Collection<NotificationOutput>> {
+    if (!authCtx.person) {
+      throw new AppError('common.requirePerson');
+    }
+
     const notiCollection = await this.notificationService.getManyNotifications({
-      where: { userId: authCtx.userId },
+      where: { userId: authCtx.person.userId },
       skip: query.offset,
       take: query.limit,
     });
@@ -79,8 +83,12 @@ export class NotificationController {
     @AuthContext() authCtx: AuthContextInfo,
     @Query() query: NotificationPatchQuery,
   ): Promise<null> {
+    if (!authCtx.person) {
+      throw new AppError('common.requirePerson');
+    }
+
     await this.notificationService.markNotificationAsRead(
-      authCtx.userId,
+      authCtx.person.userId,
       query.id,
     );
 

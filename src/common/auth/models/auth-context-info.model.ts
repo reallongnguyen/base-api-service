@@ -1,3 +1,4 @@
+import { cloneDeep, merge } from 'lodash';
 import { Role } from './role.enum';
 
 export enum AgentType {
@@ -5,17 +6,27 @@ export enum AgentType {
   service = 'service',
 }
 
-export class AuthContextInfo {
+export interface Person {
   authId: string;
-  agentType: AgentType;
   userId?: string;
+}
+
+export interface Service {
+  id: string;
+}
+
+export class AuthContextInfo {
+  agentType: AgentType;
   roles: Role[];
   expireAt?: number;
+
+  person?: Person;
+  service?: Service;
 
   static fromAuthServiceJwtPayload(obj: any): AuthContextInfo {
     const authCtx = new AuthContextInfo();
 
-    authCtx.authId = obj.sub;
+    authCtx.person = { authId: obj.sub };
     authCtx.agentType = AgentType.person;
     authCtx.roles = obj.roles || [];
     authCtx.expireAt = obj.exp;
@@ -29,5 +40,20 @@ export function shouldCache(authCtx: AuthContextInfo): boolean {
     return true;
   }
 
-  return authCtx.agentType === AgentType.person && authCtx.userId !== undefined;
+  return (
+    authCtx.agentType === AgentType.person &&
+    authCtx.person?.userId !== undefined
+  );
+}
+
+export function setUser(
+  authCtx: AuthContextInfo,
+  user: { id: string; roles: Role[] },
+): AuthContextInfo {
+  const newAuthCtx = cloneDeep(authCtx);
+
+  newAuthCtx.roles = [...newAuthCtx.roles, ...user.roles];
+  newAuthCtx.person = merge(newAuthCtx.person, { userId: user.id });
+
+  return newAuthCtx;
 }
