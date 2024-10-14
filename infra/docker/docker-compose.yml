@@ -234,7 +234,7 @@ services:
   monitor-grafana:
     image: grafana/grafana-oss:latest
     ports:
-      - '3000:3000'
+      - '1300:3000'
     restart: unless-stopped
     networks:
       - vpc-bridge
@@ -257,8 +257,6 @@ services:
 
   monitor-exporter:
     image: prom/node-exporter:latest
-    ports:
-      - '9100:9100'
     networks:
       - vpc-bridge
     volumes:
