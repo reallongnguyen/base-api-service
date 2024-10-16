@@ -7,6 +7,7 @@ import { NotificationProducerService } from '../usecases/notification-producer.s
 import { NotificationOutput } from './dto/notification.dto';
 import { Notification } from '../entities/notification.model';
 
+// TODO: move business logic to usecase layer
 @Injectable()
 export class EventSubscriber {
   constructor(

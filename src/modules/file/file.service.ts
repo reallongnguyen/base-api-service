@@ -20,11 +20,13 @@ export class FileService {
     mimeType: AvatarMimeType,
     fileSize: number,
   ): Promise<UploadUrlDto> {
-    const bucketName = this.configService.get<string>('gcp.bucket.userAsset');
+    const userAssetBucketName = this.configService.get<string>(
+      'gcp.bucket.userAsset',
+    );
     const fileExtension = mimeType.split('/')[1];
     const fileName = `${userId}/profile/avatar.${fileExtension}`;
 
-    return this.generateUploadUrl(bucketName, fileName, fileSize);
+    return this.generateUploadUrl(userAssetBucketName, fileName, fileSize);
   }
 
   async generateUploadUrl(

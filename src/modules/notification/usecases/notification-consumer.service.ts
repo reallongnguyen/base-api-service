@@ -18,6 +18,8 @@ import { Notification } from '../entities/notification.model';
 
 @Injectable()
 export class NotificationConsumerService {
+  private mergeNotificationThreshold: number;
+
   constructor(
     private logger: Logger,
     private configService: ConfigService,
@@ -25,7 +27,11 @@ export class NotificationConsumerService {
     private prismaService: PrismaService,
     private mutex: RedlockMutex,
     @InjectQueue('notification') private notiQueue: Queue,
-  ) {}
+  ) {
+    this.mergeNotificationThreshold = this.configService.get<number>(
+      'notification.mergeNotificationThreshold',
+    );
+  }
 
   async upsertNotificationSerialByKey(
     input: NotificationCreateInput,
@@ -49,10 +55,6 @@ export class NotificationConsumerService {
             `notification: notification-consumer.service: upsertNotification: perform key ${inputClone.key}`,
           );
 
-          const mergeNotificationThreshold = this.configService.get<string>(
-            'notification.mergeNotificationThreshold',
-          );
-
           try {
             const existNoti = await this.prismaService.notification.findFirst({
               where: {
@@ -60,7 +62,7 @@ export class NotificationConsumerService {
                 readAt: null,
                 notificationTime: {
                   gte: dayjs()
-                    .add(-mergeNotificationThreshold, 'seconds')
+                    .add(-this.mergeNotificationThreshold, 'seconds')
                     .toDate(),
                 },
               },

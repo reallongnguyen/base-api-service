@@ -6,14 +6,14 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { redisStore } from 'cache-manager-redis-store';
 import { BullModule } from '@nestjs/bull';
 import { LoggerModule } from './logger/logger.module';
-import { AppConfigModule } from './config/config.module';
+import { LightConfigModule } from './config/config.module';
 import { AuthModule } from './auth/auth.module';
-import { HealthModule } from '../modules/health/health.module';
+import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
-    AppConfigModule,
+    LightConfigModule,
     LoggerModule,
     CacheModule.registerAsync<RedisClientOptions>({
       inject: [ConfigService],

@@ -25,6 +25,7 @@ export class AppController {
     return {
       ...this.configService.get<Record<string, string>>('app'),
       version,
+      port: undefined,
     };
   }
 }

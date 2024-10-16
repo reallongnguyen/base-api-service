@@ -9,6 +9,7 @@ import { NotificationProcessor } from './controllers/notification.processor';
 import { NotificationProducerService } from './usecases/notification-producer.service';
 import { RedlockMutex } from './repositories/redlock.mutex';
 import { NotificationService } from './usecases/notification.service';
+import { LightConfigModule } from './config/config.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { NotificationService } from './usecases/notification.service';
         }),
       },
     ]),
+    LightConfigModule,
   ],
   controllers: [NotificationController],
   providers: [
