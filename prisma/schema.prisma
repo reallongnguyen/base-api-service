@@ -18,54 +18,81 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
+enum UserRole {
   user
   admin
+  root
+
+  @@map("user_role")
 }
 
 model User {
-  id        String   @id @default(uuid())
-  authId    String   @unique @map("auth_id") @db.Uuid
-  name      String   @db.Text
-  avatar    String?  @db.Text
-  roles     Role[]
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz()
+  id           String         @id @default(uuid())
+  authId       String         @unique @map("auth_id") @db.Uuid
+  name         String         @db.Text
+  avatar       String?        @db.Text
+  roles        UserRole[]
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  userInSpaces UserInSpaces[]
 
   @@map("users")
 }
 
-enum NotificationType {
-  publishPost
-  likePost
-  commentPost
-  likeComment
-  replyComment
-  updateProfile
+model Space {
+  id           String         @id @default(uuid())
+  name         String         @db.Text
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz()
+  userInSpaces UserInSpaces[]
+
+  @@map("spaces")
+}
+
+enum SpaceMemberRole {
+  owner
+  admin
+  member
+
+  @@map("space_member_role")
+}
+
+model UserInSpaces {
+  user      User            @relation(fields: [userId], references: [id])
+  userId    String          @map("user_id")
+  space     Space           @relation(fields: [spaceId], references: [id])
+  spaceId   String          @map("space_id")
+  joinedAt  DateTime        @map("joined_at")
+  role      SpaceMemberRole
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime        @updatedAt @map("updated_at") @db.Timestamptz()
+
+  @@id([userId, spaceId])
+  @@map("user_in_spaces")
 }
 
 model Notification {
-  id               String           @id @default(uuid())
+  id               String    @id @default(uuid())
   key              String
-  type             NotificationType
-  userId           String           @map("user_id")
+  type             String
+  userId           String    @map("user_id")
   /// [NotificationObjectType]
   subjects         Json[]
-  subjectCount     Int              @map("subject_count")
+  subjectCount     Int       @map("subject_count")
   /// [NotificationObjectType]
-  diObject         Json?            @map("di_object")
+  diObject         Json?     @map("di_object")
   /// [NotificationObjectType]
-  inObject         Json?            @map("in_object")
+  inObject         Json?     @map("in_object")
   /// [NotificationObjectType]
-  prObject         Json?            @map("pr_object")
+  prObject         Json?     @map("pr_object")
   text             String
   /// [NotificationDecoratorType]
   decorators       Json[]
   link             String?
-  notificationTime DateTime         @default(now()) @map("notification_time") @db.Timestamptz()
-  readAt           DateTime?        @map("read_at") @db.Timestamptz()
-  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz()
-  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz()
+  notificationTime DateTime  @default(now()) @map("notification_time") @db.Timestamptz()
+  readAt           DateTime? @map("read_at") @db.Timestamptz()
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz()
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz()
 
   @@index([userId], type: Hash)
   @@index([userId, readAt])

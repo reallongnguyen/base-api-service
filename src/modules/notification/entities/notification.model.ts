@@ -1,5 +1,4 @@
 import { Notification as NotificationIf } from '@prisma/client';
-import { NotificationType } from './notification-type.enum';
 
 export class NotificationObject implements PrismaJson.NotificationObjectType {
   id: string;
@@ -21,7 +20,7 @@ export class NotificationDecorator
 export class Notification implements NotificationIf {
   id: string;
   key: string;
-  type: NotificationType;
+  type: string;
   userId: string;
   subjects: NotificationObject[];
   subjectCount: number;

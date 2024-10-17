@@ -6,7 +6,6 @@ import {
   Notification,
   NotificationDecorator,
 } from '../../entities/notification.model';
-import { NotificationType } from '../../entities/notification-type.enum';
 
 export class NotificationCreateInput
   implements
@@ -24,7 +23,7 @@ export class NotificationCreateInput
     >
 {
   key: string;
-  type: NotificationType;
+  type: string;
   userId: string;
   subjects?: PrismaJson.NotificationObjectType[];
   subjectCount: number;

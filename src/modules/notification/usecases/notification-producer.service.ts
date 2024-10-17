@@ -3,7 +3,6 @@ import { Logger } from 'nestjs-pino';
 import { AppResult, ProfileUpdatedEvent } from 'src/common/models';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
-import { NotificationType } from '../entities/notification-type.enum';
 import { NotificationCreateInput } from '../controllers/dto/notification.dto';
 
 @Injectable()
@@ -16,8 +15,8 @@ export class NotificationProducerService {
     payload: ProfileUpdatedEvent,
   ): Promise<AppResult<string, string>> {
     const notification = new NotificationCreateInput();
-    notification.key = `${NotificationType.updateProfile}:${payload.id}:${payload.id}`;
-    notification.type = NotificationType.updateProfile;
+    notification.key = `updateProfile:${payload.id}:${payload.id}`;
+    notification.type = 'updateProfile';
     notification.userId = payload.id;
     notification.subjects = [
       {
