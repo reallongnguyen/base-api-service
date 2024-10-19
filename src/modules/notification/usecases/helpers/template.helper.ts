@@ -2,12 +2,12 @@
 const extractAttr = (attrString: string) => {
   const attrMap: Record<string, string> = {};
 
-  const attrs = attrString.split('" ');
+  const attrs = attrString.split(/"\s+/);
 
   attrs.forEach((attr) => {
-    const [key, val] = attr.split('="');
+    const [key, val] = attr.split('=');
 
-    attrMap[key] = val.replace('"', '');
+    attrMap[key] = val.replace(/^"/g, '').replace(/([^\\])"$/g, '$1');
   });
 
   return attrMap;
