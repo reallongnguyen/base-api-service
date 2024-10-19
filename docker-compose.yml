@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres
+    restart: unless-stopped
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 5432:5432
+
+  redis:
+    image: redis/redis-stack
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    # environment:
+    #   REDIS_ARGS: --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+
+  mqtt01:
+    image: emqx:latest
+    restart: unless-stopped
+    ports:
+      - 18083:18083
+      - 1883:1883
+      - 8883:8883
+      - 8083:8083
+      - 8084:8084
+    volumes:
+      - vol-emqx01-data:/opt/emqx/data
+      - vol-emqx01-log:/opt/emqx/log
+    environment:
+      - 'EMQX_NODE__NAME=emqx@node01.emqx.io'
+      - 'EMQX_CLUSTER__DISCOVERY_STRATEGY=static'
+      - 'EMQX_CLUSTER__STATIC__SEEDS=[emqx@node01.emqx.io, emqx@node02.emqx.io]'
+    networks:
+      vpc-bridge:
+        aliases:
+          - node01.emqx.io
+
+  mqtt02:
+    image: emqx:latest
+    restart: unless-stopped
+    ports:
+      - 28083:18083
+      - 2883:1883
+      - 9883:8883
+      - 9083:8083
+      - 9084:8084
+    volumes:
+      - vol-emqx02-data:/opt/emqx/data
+      - vol-emqx02-log:/opt/emqx/log
+    environment:
+      - 'EMQX_NODE__NAME=emqx@node02.emqx.io'
+      - 'EMQX_CLUSTER__DISCOVERY_STRATEGY=static'
+      - 'EMQX_CLUSTER__STATIC__SEEDS=[emqx@node01.emqx.io, emqx@node02.emqx.io]'
+    networks:
+      vpc-bridge:
+        aliases:
+          - node02.emqx.io
+
+volumes:
+  pg-data:
+  redis-data:
+  vol-emqx01-data:
+  vol-emqx01-log:
+  vol-emqx02-data:
+  vol-emqx02-log:
+
+networks:
+  vpc-bridge:
+    driver: bridge
